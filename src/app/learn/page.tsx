@@ -1,18 +1,26 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { api } from "@/lib/api";
+import { api, CourseJobResponse, CourseSummary } from "@/lib/api";
 
 export default function LearnPage() {
+  const router = useRouter();
   const [topic, setTopic] = useState("");
   const [jobId, setJobId] = useState<number | null>(null);
-  const [existingCourse, setExistingCourse] = useState<any>(null);
+  const [existingCourse, setExistingCourse] = useState<CourseSummary | null>(null);
+
+  useEffect(() => {
+    if (!localStorage.getItem("refresh_token")) {
+      router.push("/login");
+    }
+  }, [router]);
 
   const createCourse = useMutation({
     mutationFn: (topic: string) => api.createCourse(topic),
-    onSuccess: (data) => {
+    onSuccess: (data: CourseJobResponse) => {
       if (data.status === "exists" && data.course) {
         // Dedup path (Task 11's find_existing): a published course already
         // matches this topic — render it directly, no job to poll.
@@ -45,7 +53,15 @@ export default function LearnPage() {
         <Button type="submit">Start</Button>
       </form>
 
-      {jobStatus.data?.status && jobStatus.data.status !== "succeeded" && (
+      {createCourse.isError && (
+        <p className="text-red-600">Failed to start course generation. Please try again.</p>
+      )}
+
+      {jobStatus.isError && (
+        <p className="text-red-600">Failed to check course generation status. Please try again.</p>
+      )}
+
+      {jobStatus.data?.status && jobStatus.data.status !== "succeeded" && jobStatus.data.status !== "failed" && (
         <p>Status: {jobStatus.data.status}</p>
       )}
       {jobStatus.data?.status === "failed" && (
@@ -53,11 +69,11 @@ export default function LearnPage() {
       )}
       {course && (
         <ul className="space-y-2">
-          {course.modules.map((m: any, i: number) => (
+          {course.modules.map((m, i) => (
             <li key={i}>
               <strong>{m.title}</strong>
               <ul className="ml-4 list-disc">
-                {m.chapters.map((c: any, j: number) => <li key={j}>{c.title}</li>)}
+                {m.chapters.map((c, j) => <li key={j}>{c.title}</li>)}
               </ul>
             </li>
           ))}
