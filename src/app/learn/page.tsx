@@ -8,11 +8,20 @@ import { api } from "@/lib/api";
 export default function LearnPage() {
   const [topic, setTopic] = useState("");
   const [jobId, setJobId] = useState<number | null>(null);
+  const [existingCourse, setExistingCourse] = useState<any>(null);
 
   const createCourse = useMutation({
     mutationFn: (topic: string) => api.createCourse(topic),
     onSuccess: (data) => {
-      if (data.job_id) setJobId(data.job_id);
+      if (data.status === "exists" && data.course) {
+        // Dedup path (Task 11's find_existing): a published course already
+        // matches this topic — render it directly, no job to poll.
+        setExistingCourse(data.course);
+        setJobId(null);
+      } else if (data.job_id) {
+        setExistingCourse(null);
+        setJobId(data.job_id);
+      }
     },
   });
 
@@ -23,6 +32,8 @@ export default function LearnPage() {
     refetchInterval: (query) =>
       query.state.data?.status === "pending" || query.state.data?.status === "running" ? 3000 : false,
   });
+
+  const course = existingCourse ?? jobStatus.data?.course;
 
   return (
     <div className="max-w-2xl mx-auto mt-20 space-y-4">
@@ -40,9 +51,9 @@ export default function LearnPage() {
       {jobStatus.data?.status === "failed" && (
         <p className="text-red-600">Generation failed: {jobStatus.data.error}</p>
       )}
-      {jobStatus.data?.course && (
+      {course && (
         <ul className="space-y-2">
-          {jobStatus.data.course.modules.map((m: any, i: number) => (
+          {course.modules.map((m: any, i: number) => (
             <li key={i}>
               <strong>{m.title}</strong>
               <ul className="ml-4 list-disc">

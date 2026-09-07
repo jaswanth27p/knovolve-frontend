@@ -11,7 +11,7 @@ async function request(path: string, options: RequestInit = {}) {
   if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
 
   const resp = await fetch(`${API_BASE}${path}`, { ...options, headers });
-  if (resp.status === 401 && path !== "/auth/refresh") {
+  if (resp.status === 401 && !["/auth/refresh", "/auth/login", "/auth/register"].includes(path)) {
     const refreshToken = localStorage.getItem("refresh_token");
     if (refreshToken) {
       const refreshResp = await fetch(`${API_BASE}/auth/refresh`, {
