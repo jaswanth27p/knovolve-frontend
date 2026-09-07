@@ -11,15 +11,18 @@ export default function ChapterPage() {
   const params = useParams<{ slug: string; chapterId: string }>();
   const [sections, setSections] = useState<Record<number, ChapterContentSectionEvent>>({});
   const [error, setError] = useState<string | null>(null);
-  const started = useRef(false);
+  const startedFor = useRef<string | null>(null);
 
   useEffect(() => {
     if (!localStorage.getItem("refresh_token")) {
       router.push("/login");
       return;
     }
-    if (started.current) return;
-    started.current = true;
+    const key = `${params.slug}:${params.chapterId}`;
+    if (startedFor.current === key) return;
+    startedFor.current = key;
+    setSections({});
+    setError(null);
 
     api
       .streamChapterContent(params.slug, Number(params.chapterId), (event: ChapterContentEvent) => {
