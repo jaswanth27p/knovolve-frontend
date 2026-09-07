@@ -115,6 +115,7 @@ async function request<T>(path: string, options: RequestInit = {}, isRetry = fal
     }
   }
   if (!resp.ok) throw new Error(`${resp.status}: ${await resp.text()}`);
+  if (resp.status === 204) return undefined as unknown as T;
   return resp.json();
 }
 

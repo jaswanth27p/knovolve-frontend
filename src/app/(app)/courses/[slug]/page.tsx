@@ -19,6 +19,7 @@ export default function CourseDetailPage() {
       {data && (
         <>
           <h1 className="text-2xl font-semibold tracking-tight">{data.topic_raw}</h1>
+          {data.modules.length === 0 && <p className="text-zinc-500">No modules yet.</p>}
           <div className="space-y-4">
             {data.modules.map((m) => (
               <Card key={m.id}>
