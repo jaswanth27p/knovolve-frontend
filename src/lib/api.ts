@@ -68,23 +68,27 @@ async function request<T>(path: string, options: RequestInit = {}, isRetry = fal
 
   const resp = await fetch(`${API_BASE}${path}`, { ...options, headers });
   if (!isRetry && resp.status === 401 && !["/auth/refresh", "/auth/login", "/auth/register"].includes(path)) {
-    const refreshToken = localStorage.getItem("refresh_token");
-    if (refreshToken) {
-      const refreshResp = await fetch(`${API_BASE}/auth/refresh`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ refresh_token: refreshToken }),
-      });
-      if (refreshResp.ok) {
-        const tokens: TokenResponse = await refreshResp.json();
-        setAccessToken(tokens.access_token);
-        localStorage.setItem("refresh_token", tokens.refresh_token);
-        return request<T>(path, options, true); // retry original request once, no further refresh
-      }
+    if (await refreshAccessToken()) {
+      return request<T>(path, options, true); // retry original request once, no further refresh
     }
   }
   if (!resp.ok) throw new Error(`${resp.status}: ${await resp.text()}`);
   return resp.json();
+}
+
+async function refreshAccessToken(): Promise<boolean> {
+  const refreshToken = localStorage.getItem("refresh_token");
+  if (!refreshToken) return false;
+  const refreshResp = await fetch(`${API_BASE}/auth/refresh`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ refresh_token: refreshToken }),
+  });
+  if (!refreshResp.ok) return false;
+  const tokens: TokenResponse = await refreshResp.json();
+  setAccessToken(tokens.access_token);
+  localStorage.setItem("refresh_token", tokens.refresh_token);
+  return true;
 }
 
 export const api = {
@@ -96,17 +100,41 @@ export const api = {
     request<CourseJobResponse>("/courses", { method: "POST", body: JSON.stringify({ topic }) }),
   getJob: (jobId: number): Promise<CourseJobResponse> => request<CourseJobResponse>(`/courses/jobs/${jobId}`),
   streamChapterContent,
+  logout,
 };
+
+export async function logout(): Promise<void> {
+  const refreshToken = localStorage.getItem("refresh_token");
+  if (refreshToken) {
+    await fetch(`${API_BASE}/auth/logout`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    }).catch(() => undefined);
+  }
+  setAccessToken(null);
+  localStorage.removeItem("refresh_token");
+}
 
 export async function streamChapterContent(
   courseSlug: string,
   chapterId: number,
   onEvent: (event: ChapterContentEvent) => void,
 ): Promise<void> {
-  const headers = new Headers();
-  if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
+  async function attempt(): Promise<Response> {
+    const headers = new Headers();
+    if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
+    return fetch(`${API_BASE}/courses/${courseSlug}/chapters/${chapterId}/content`, { headers });
+  }
 
-  const resp = await fetch(`${API_BASE}/courses/${courseSlug}/chapters/${chapterId}/content`, { headers });
+  let resp = await attempt();
+  if (resp.status === 401) {
+    // accessToken is module-scoped — lost on hard page reload — but refresh_token
+    // survives in localStorage. Refresh once and retry, mirroring `request`.
+    if (await refreshAccessToken()) {
+      resp = await attempt();
+    }
+  }
   if (!resp.ok || !resp.body) throw new Error(`${resp.status}: ${await resp.text()}`);
 
   const reader = resp.body.getReader();

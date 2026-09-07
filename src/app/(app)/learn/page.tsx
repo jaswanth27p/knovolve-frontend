@@ -45,7 +45,14 @@ export default function LearnPage() {
   const course = existingCourse ?? jobStatus.data?.course;
 
   return (
-    <div className="max-w-2xl mx-auto mt-20 space-y-4">
+    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col space-y-6 px-6 py-10">
+      <div className="space-y-1">
+        <h1 className="text-2xl font-semibold tracking-tight">Learn</h1>
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          Generate a course from a topic, or revisit one you&apos;ve made.
+        </p>
+      </div>
+
       <form
         onSubmit={(e) => { e.preventDefault(); createCourse.mutate(topic); }}
         className="flex gap-2"
