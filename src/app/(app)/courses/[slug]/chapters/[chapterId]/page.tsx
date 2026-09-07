@@ -70,8 +70,10 @@ export default function ChapterPage() {
           ))}
           {section.diagram_status === "pending" && <p className="text-sm">Rendering diagram…</p>}
           {section.diagram_status === "ready" && section.diagram_image_url && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={section.diagram_image_url} alt={section.heading} />
+            <div className="inline-block rounded-md bg-white p-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={section.diagram_image_url} alt={section.heading} />
+            </div>
           )}
           {section.diagram_status === "failed" && (
             <p className="text-sm text-muted-foreground">Diagram unavailable.</p>
