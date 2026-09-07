@@ -119,19 +119,35 @@ async function request<T>(path: string, options: RequestInit = {}, isRetry = fal
   return resp.json();
 }
 
+// Refresh tokens are single-use/rotating — the backend treats a second
+// presentation of an already-rotated token as reuse and revokes the whole
+// family. Multiple requests can independently 401 at once (e.g. the courses
+// page's two parallel queries, or a dev-mode double-invoke) and each would
+// otherwise read the same stored token and race to redeem it. Share one
+// in-flight refresh across all concurrent callers instead.
+let refreshInFlight: Promise<boolean> | null = null;
+
 async function refreshAccessToken(): Promise<boolean> {
-  const refreshToken = localStorage.getItem("refresh_token");
-  if (!refreshToken) return false;
-  const refreshResp = await fetch(`${API_BASE}/auth/refresh`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ refresh_token: refreshToken }),
-  });
-  if (!refreshResp.ok) return false;
-  const tokens: TokenResponse = await refreshResp.json();
-  setAccessToken(tokens.access_token);
-  localStorage.setItem("refresh_token", tokens.refresh_token);
-  return true;
+  if (refreshInFlight) return refreshInFlight;
+  refreshInFlight = (async () => {
+    const refreshToken = localStorage.getItem("refresh_token");
+    if (!refreshToken) return false;
+    const refreshResp = await fetch(`${API_BASE}/auth/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+    if (!refreshResp.ok) return false;
+    const tokens: TokenResponse = await refreshResp.json();
+    setAccessToken(tokens.access_token);
+    localStorage.setItem("refresh_token", tokens.refresh_token);
+    return true;
+  })();
+  try {
+    return await refreshInFlight;
+  } finally {
+    refreshInFlight = null;
+  }
 }
 
 export const api = {
