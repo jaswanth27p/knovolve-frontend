@@ -47,7 +47,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <header className="flex h-14 items-center justify-between border-b border-black/10 px-4 md:hidden dark:border-white/10">
           <span className="text-lg font-semibold tracking-tight">Knovolve</span>
           <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-            <SheetTrigger render={<Button variant="outline" size="sm" aria-label="Open navigation">Menu</Button>} />
+            <SheetTrigger render={<Button variant="outline" size="sm">Menu</Button>} />
             <SheetContent side="left">
               <SheetTitle className="sr-only">Navigation</SheetTitle>
               <div className="flex flex-col gap-6 p-4">

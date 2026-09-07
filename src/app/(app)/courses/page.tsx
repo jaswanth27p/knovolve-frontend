@@ -13,25 +13,44 @@ function CourseLink({ slug, children }: { slug: string; children: React.ReactNod
 
 export default function CoursesPage() {
   const queryClient = useQueryClient();
-  const [removeError, setRemoveError] = useState<string | null>(null);
+  const [pendingIds, setPendingIds] = useState<Set<number>>(new Set());
+  const [removeErrors, setRemoveErrors] = useState<Record<number, string>>({});
 
   const myCourses = useQuery({ queryKey: ["myCourses"], queryFn: () => api.getMyCourses() });
   const publicCourses = useQuery({ queryKey: ["publicCourses"], queryFn: () => api.getPublicCourses() });
 
   const remove = useMutation({
     mutationFn: (id: number) => api.deleteMyCourse(id),
+    onMutate: (id) => {
+      setPendingIds((prev) => new Set(prev).add(id));
+      setRemoveErrors((prev) => {
+        const { [id]: _omit, ...rest } = prev;
+        return rest;
+      });
+    },
     onSuccess: () => {
-      setRemoveError(null);
       queryClient.invalidateQueries({ queryKey: ["myCourses"] });
       queryClient.invalidateQueries({ queryKey: ["publicCourses"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
     },
-    onError: (err) => {
-      setRemoveError(err instanceof Error ? err.message : "Failed to remove course.");
+    onError: (err, id) => {
+      setRemoveErrors((prev) => ({
+        ...prev,
+        [id]: err instanceof Error ? err.message : "Failed to remove course.",
+      }));
+    },
+    onSettled: (_data, _err, id) => {
+      setPendingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     },
   });
 
   function MyCard({ c }: { c: TrackedCourse }) {
+    const isPending = pendingIds.has(c.id);
+    const error = removeErrors[c.id];
     return (
       <Card>
         <CardHeader className="pb-2">
@@ -49,12 +68,13 @@ export default function CoursesPage() {
             variant="ghost"
             size="sm"
             className="ml-auto text-zinc-500"
-            disabled={remove.isPending && remove.variables === c.id}
+            disabled={isPending}
             onClick={() => remove.mutate(c.id)}
           >
             Remove
           </Button>
         </CardContent>
+        {error && <p className="px-6 pb-3 text-sm text-red-600">Failed to remove course: {error}</p>}
       </Card>
     );
   }
@@ -65,7 +85,6 @@ export default function CoursesPage() {
 
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">My courses</h2>
-        {removeError && <p className="text-red-600">Failed to remove course: {removeError}</p>}
         {myCourses.isLoading && <p className="text-zinc-500">Loading…</p>}
         {myCourses.isError && <p className="text-red-600">Failed to load courses.</p>}
         {myCourses.data?.length === 0 && (

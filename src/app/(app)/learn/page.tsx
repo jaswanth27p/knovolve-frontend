@@ -11,11 +11,7 @@ export default function LearnPage() {
   const [topic, setTopic] = useState("");
   const [jobId, setJobId] = useState<number | null>(null);
 
-  useEffect(() => {
-    if (!localStorage.getItem("refresh_token")) {
-      router.push("/login");
-    }
-  }, [router]);
+  // Auth is gated by (app)/layout.tsx for every route in this group.
 
   const createCourse = useMutation({
     mutationFn: (topic: string) => api.createCourse(topic),
