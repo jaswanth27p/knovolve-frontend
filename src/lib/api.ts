@@ -81,6 +81,28 @@ export interface DashboardResponse {
   total_count: number;
 }
 
+export interface PublicCourse {
+  id: number;
+  topic_slug: string;
+  topic_raw: string;
+  module_count: number;
+  chapter_count: number;
+}
+
+export interface CourseDetailModule {
+  id: number;
+  title: string;
+  objective: string;
+  chapters: { id: number; title: string; objective: string }[];
+}
+
+export interface CourseDetail {
+  id: number;
+  topic_slug: string;
+  topic_raw: string;
+  modules: CourseDetailModule[];
+}
+
 async function request<T>(path: string, options: RequestInit = {}, isRetry = false): Promise<T> {
   const headers = new Headers(options.headers);
   headers.set("Content-Type", "application/json");
@@ -120,6 +142,11 @@ export const api = {
     request<CourseJobResponse>("/courses", { method: "POST", body: JSON.stringify({ topic }) }),
   getJob: (jobId: number): Promise<CourseJobResponse> => request<CourseJobResponse>(`/courses/jobs/${jobId}`),
   getDashboard: (): Promise<DashboardResponse> => request<DashboardResponse>("/me/dashboard"),
+  getMyCourses: (): Promise<TrackedCourse[]> => request<TrackedCourse[]>("/me/courses"),
+  getPublicCourses: (): Promise<PublicCourse[]> => request<PublicCourse[]>("/courses"),
+  deleteMyCourse: (courseId: number): Promise<void> =>
+    request<void>(`/me/courses/${courseId}`, { method: "DELETE" }),
+  getCourse: (slug: string): Promise<CourseDetail> => request<CourseDetail>(`/courses/${slug}`),
   streamChapterContent,
   logout,
 };

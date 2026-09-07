@@ -1,17 +1,15 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { api, CourseJobResponse, CourseSummary } from "@/lib/api";
+import { api, CourseJobResponse } from "@/lib/api";
 
 export default function LearnPage() {
   const router = useRouter();
   const [topic, setTopic] = useState("");
   const [jobId, setJobId] = useState<number | null>(null);
-  const [existingCourse, setExistingCourse] = useState<CourseSummary | null>(null);
 
   useEffect(() => {
     if (!localStorage.getItem("refresh_token")) {
@@ -23,12 +21,8 @@ export default function LearnPage() {
     mutationFn: (topic: string) => api.createCourse(topic),
     onSuccess: (data: CourseJobResponse) => {
       if (data.status === "exists" && data.course) {
-        // Dedup path (Task 11's find_existing): a published course already
-        // matches this topic — render it directly, no job to poll.
-        setExistingCourse(data.course);
-        setJobId(null);
+        router.push(`/courses/${data.course.topic_slug}`);
       } else if (data.job_id) {
-        setExistingCourse(null);
         setJobId(data.job_id);
       }
     },
@@ -42,7 +36,11 @@ export default function LearnPage() {
       query.state.data?.status === "pending" || query.state.data?.status === "running" ? 3000 : false,
   });
 
-  const course = existingCourse ?? jobStatus.data?.course;
+  useEffect(() => {
+    if (jobStatus.data?.status === "succeeded" && jobStatus.data.course) {
+      router.push(`/courses/${jobStatus.data.course.topic_slug}`);
+    }
+  }, [jobStatus.data, router]);
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col space-y-6 px-6 py-10">
@@ -74,24 +72,6 @@ export default function LearnPage() {
       )}
       {jobStatus.data?.status === "failed" && (
         <p className="text-red-600">Generation failed: {jobStatus.data.error}</p>
-      )}
-      {course && (
-        <ul className="space-y-2">
-          {course.modules.map((m, i) => (
-            <li key={i}>
-              <strong>{m.title}</strong>
-              <ul className="ml-4 list-disc">
-                {m.chapters.map((c) => (
-                  <li key={c.id}>
-                    <Link href={`/courses/${course.topic_slug}/chapters/${c.id}`} className="underline">
-                      {c.title}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </li>
-          ))}
-        </ul>
       )}
     </div>
   );
