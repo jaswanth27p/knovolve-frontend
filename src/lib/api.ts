@@ -61,6 +61,26 @@ export interface CourseJobResponse {
   error: string | null;
 }
 
+export interface TrackedCourse {
+  id: number;
+  topic_slug: string;
+  topic_raw: string;
+  status: "in_progress" | "completed";
+  progress: number;
+  last_opened_at: string;
+  module_count: number;
+  chapter_count: number;
+  content_ready: boolean;
+}
+
+export interface DashboardResponse {
+  in_progress: TrackedCourse[];
+  completed: TrackedCourse[];
+  in_progress_count: number;
+  completed_count: number;
+  total_count: number;
+}
+
 async function request<T>(path: string, options: RequestInit = {}, isRetry = false): Promise<T> {
   const headers = new Headers(options.headers);
   headers.set("Content-Type", "application/json");
@@ -99,6 +119,7 @@ export const api = {
   createCourse: (topic: string): Promise<CourseJobResponse> =>
     request<CourseJobResponse>("/courses", { method: "POST", body: JSON.stringify({ topic }) }),
   getJob: (jobId: number): Promise<CourseJobResponse> => request<CourseJobResponse>(`/courses/jobs/${jobId}`),
+  getDashboard: (): Promise<DashboardResponse> => request<DashboardResponse>("/me/dashboard"),
   streamChapterContent,
   logout,
 };
