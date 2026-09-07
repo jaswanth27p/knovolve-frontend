@@ -12,15 +12,40 @@ export interface TokenResponse {
 }
 
 export interface ChapterSummary {
+  id: number;
   title: string;
   objective: string;
 }
 
 export interface ModuleSummary {
+  id: number;
   title: string;
   objective: string;
   chapters: ChapterSummary[];
 }
+
+export interface ChapterContentExample {
+  prompt: string;
+  walkthrough: string;
+}
+
+export interface ChapterContentSectionEvent {
+  type: "section_ready";
+  order: number;
+  heading: string;
+  kind: "intro" | "teaching";
+  body_markdown: string;
+  examples: ChapterContentExample[];
+  diagram_status: "pending" | "ready" | "failed" | null;
+  diagram_image_url: string | null;
+}
+
+export type ChapterContentEvent =
+  | ChapterContentSectionEvent
+  | { type: "diagram_ready"; order: number; diagram_image_url: string }
+  | { type: "diagram_failed"; order: number }
+  | { type: "done" }
+  | { type: "error"; message: string };
 
 export interface CourseSummary {
   id: number;
@@ -70,4 +95,32 @@ export const api = {
   createCourse: (topic: string): Promise<CourseJobResponse> =>
     request<CourseJobResponse>("/courses", { method: "POST", body: JSON.stringify({ topic }) }),
   getJob: (jobId: number): Promise<CourseJobResponse> => request<CourseJobResponse>(`/courses/jobs/${jobId}`),
+  streamChapterContent,
 };
+
+export async function streamChapterContent(
+  courseSlug: string,
+  chapterId: number,
+  onEvent: (event: ChapterContentEvent) => void,
+): Promise<void> {
+  const headers = new Headers();
+  if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
+
+  const resp = await fetch(`${API_BASE}/courses/${courseSlug}/chapters/${chapterId}/content`, { headers });
+  if (!resp.ok || !resp.body) throw new Error(`${resp.status}: ${await resp.text()}`);
+
+  const reader = resp.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+    for (const line of lines) {
+      if (line.trim()) onEvent(JSON.parse(line) as ChapterContentEvent);
+    }
+  }
+  if (buffer.trim()) onEvent(JSON.parse(buffer) as ChapterContentEvent);
+}
