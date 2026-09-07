@@ -25,11 +25,19 @@ export default function LoginPage() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-sm mx-auto mt-20 space-y-4">
-      <Input placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
-      <Input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
-      {error && <p className="text-red-600 text-sm">{error}</p>}
-      <Button type="submit" className="w-full">Log in</Button>
-    </form>
+    <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center space-y-6 px-6">
+      <div className="space-y-1">
+        <h1 className="text-2xl font-semibold tracking-tight">Log in</h1>
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          Continue to your courses.
+        </p>
+      </div>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Input placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <Input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
+        {error && <p className="text-red-600 text-sm">{error}</p>}
+        <Button type="submit" className="w-full">Log in</Button>
+      </form>
+    </div>
   );
 }
