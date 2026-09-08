@@ -3,6 +3,8 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/empty-state";
+import { Hourglass } from "lucide-react";
 import { api } from "@/lib/api";
 
 export default function CourseDetailPage() {
@@ -19,7 +21,14 @@ export default function CourseDetailPage() {
       {data && (
         <>
           <h1 className="text-2xl font-semibold tracking-tight">{data.topic_raw}</h1>
-          {data.modules.length === 0 && <p className="text-zinc-500">No modules yet.</p>}
+          {data.modules.length === 0 && (
+            <EmptyState
+              icon={Hourglass}
+              title="Content is being generated"
+              description="Modules and chapters will appear here as they're ready."
+              compact
+            />
+          )}
           <div className="space-y-4">
             {data.modules.map((m) => (
               <Card key={m.id}>

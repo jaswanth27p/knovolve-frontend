@@ -1,10 +1,12 @@
 import Link from "next/link";
+import { BrandLogo } from "@/components/sidebar-nav";
 
 export default function Home() {
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-6 py-20">
       <main className="flex w-full max-w-2xl flex-col items-center gap-8 text-center">
         <div className="flex flex-col items-center gap-3">
+          <BrandLogo className="size-16 text-foreground" />
           <span className="rounded-full border border-black/10 px-3 py-1 text-sm text-zinc-500 dark:border-white/15 dark:text-zinc-400">
             Adaptive learning
           </span>

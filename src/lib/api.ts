@@ -1,13 +1,19 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
 
-let accessToken: string | null = null;
-export function setAccessToken(token: string | null) {
-  accessToken = token;
-}
+// Access/refresh tokens live only in httpOnly cookies the backend sets on
+// /auth/register, /auth/login and /auth/refresh — never in JS-readable
+// storage, so an XSS payload can't read them. The browser attaches them
+// automatically on every request below via `credentials: "include"`.
+//
+// This custom header is required by the backend on every cookie-authenticated
+// request (see app/auth/dependencies.py's require_csrf_header): SameSite=Strict
+// already blocks the cookie from riding along on a cross-site request, but a
+// plain cross-site form POST also can't attach a custom header, and a
+// cross-site fetch that tries to would trigger a CORS preflight the backend's
+// origin allowlist rejects. Defense in depth against CSRF.
+const CSRF_HEADERS = { "X-Requested-With": "knovolve" } as const;
 
-export interface TokenResponse {
-  access_token: string;
-  refresh_token: string;
+export interface AuthResponse {
   token_type: string;
 }
 
@@ -103,12 +109,26 @@ export interface CourseDetail {
   modules: CourseDetailModule[];
 }
 
+// Non-sensitive UI flag only — never trusted for actual authorization.
+// Guards read it to decide whether to render the optimistic "logged in"
+// shell before the first request round-trips; the real verdict is always
+// enforced by the backend via the httpOnly cookies on each API call.
+function setLoggedInFlag(value: boolean) {
+  try {
+    if (value) localStorage.setItem("logged_in", "1");
+    else localStorage.removeItem("logged_in");
+  } catch {
+    // localStorage unavailable (SSR, privacy mode) - guards fall back to
+    // the request-level 401 check instead.
+  }
+}
+
 async function request<T>(path: string, options: RequestInit = {}, isRetry = false): Promise<T> {
   const headers = new Headers(options.headers);
   headers.set("Content-Type", "application/json");
-  if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
+  headers.set("X-Requested-With", CSRF_HEADERS["X-Requested-With"]);
 
-  const resp = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  const resp = await fetch(`${API_BASE}${path}`, { ...options, headers, credentials: "include" });
   if (!isRetry && resp.status === 401 && !["/auth/refresh", "/auth/login", "/auth/register"].includes(path)) {
     if (await refreshAccessToken()) {
       return request<T>(path, options, true); // retry original request once, no further refresh
@@ -119,28 +139,31 @@ async function request<T>(path: string, options: RequestInit = {}, isRetry = fal
   return resp.json();
 }
 
-// Refresh tokens are single-use/rotating — the backend treats a second
-// presentation of an already-rotated token as reuse and revokes the whole
-// family. Multiple requests can independently 401 at once (e.g. the courses
-// page's two parallel queries, or a dev-mode double-invoke) and each would
-// otherwise read the same stored token and race to redeem it. Share one
-// in-flight refresh across all concurrent callers instead.
+// The access-token cookie is short-lived and the refresh-token cookie
+// rotates on every use — the backend treats a second presentation of an
+// already-rotated token as reuse and revokes the whole family. Multiple
+// requests can independently 401 at once (e.g. the courses page's two
+// parallel queries, or a dev-mode double-invoke) and each would otherwise
+// race to redeem the same refresh cookie. Share one in-flight refresh across
+// all concurrent callers instead.
 let refreshInFlight: Promise<boolean> | null = null;
 
 async function refreshAccessToken(): Promise<boolean> {
   if (refreshInFlight) return refreshInFlight;
   refreshInFlight = (async () => {
-    const refreshToken = localStorage.getItem("refresh_token");
-    if (!refreshToken) return false;
     const refreshResp = await fetch(`${API_BASE}/auth/refresh`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refresh_token: refreshToken }),
+      headers: { "Content-Type": "application/json", ...CSRF_HEADERS },
+      credentials: "include",
     });
-    if (!refreshResp.ok) return false;
-    const tokens: TokenResponse = await refreshResp.json();
-    setAccessToken(tokens.access_token);
-    localStorage.setItem("refresh_token", tokens.refresh_token);
+    if (!refreshResp.ok) {
+      // Refresh cookie is invalid/expired/revoked (e.g. rotation-reuse
+      // detection) — the session is unrecoverable. Send the user back to
+      // login; the backend already cleared the cookies on this response.
+      setLoggedInFlag(false);
+      if (typeof window !== "undefined") window.location.href = "/login";
+      return false;
+    }
     return true;
   })();
   try {
@@ -151,10 +174,16 @@ async function refreshAccessToken(): Promise<boolean> {
 }
 
 export const api = {
-  register: (email: string, password: string): Promise<TokenResponse> =>
-    request<TokenResponse>("/auth/register", { method: "POST", body: JSON.stringify({ email, password }) }),
-  login: (email: string, password: string): Promise<TokenResponse> =>
-    request<TokenResponse>("/auth/login", { method: "POST", body: JSON.stringify({ email, password }) }),
+  register: (email: string, password: string): Promise<AuthResponse> =>
+    request<AuthResponse>("/auth/register", { method: "POST", body: JSON.stringify({ email, password }) }),
+  login: async (email: string, password: string): Promise<AuthResponse> => {
+    const result = await request<AuthResponse>("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    });
+    setLoggedInFlag(true);
+    return result;
+  },
   createCourse: (topic: string): Promise<CourseJobResponse> =>
     request<CourseJobResponse>("/courses", { method: "POST", body: JSON.stringify({ topic }) }),
   getJob: (jobId: number): Promise<CourseJobResponse> => request<CourseJobResponse>(`/courses/jobs/${jobId}`),
@@ -166,19 +195,24 @@ export const api = {
   getCourse: (slug: string): Promise<CourseDetail> => request<CourseDetail>(`/courses/${slug}`),
   streamChapterContent,
   logout,
+  isLoggedIn,
 };
 
-export async function logout(): Promise<void> {
-  const refreshToken = localStorage.getItem("refresh_token");
-  if (refreshToken) {
-    await fetch(`${API_BASE}/auth/logout`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refresh_token: refreshToken }),
-    }).catch(() => undefined);
+export function isLoggedIn(): boolean {
+  try {
+    return localStorage.getItem("logged_in") === "1";
+  } catch {
+    return false;
   }
-  setAccessToken(null);
-  localStorage.removeItem("refresh_token");
+}
+
+export async function logout(): Promise<void> {
+  await fetch(`${API_BASE}/auth/logout`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...CSRF_HEADERS },
+    credentials: "include",
+  }).catch(() => undefined);
+  setLoggedInFlag(false);
 }
 
 export async function streamChapterContent(
@@ -187,15 +221,16 @@ export async function streamChapterContent(
   onEvent: (event: ChapterContentEvent) => void,
 ): Promise<void> {
   async function attempt(): Promise<Response> {
-    const headers = new Headers();
-    if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
-    return fetch(`${API_BASE}/courses/${courseSlug}/chapters/${chapterId}/content`, { headers });
+    return fetch(`${API_BASE}/courses/${courseSlug}/chapters/${chapterId}/content`, {
+      headers: CSRF_HEADERS,
+      credentials: "include",
+    });
   }
 
   let resp = await attempt();
   if (resp.status === 401) {
-    // accessToken is module-scoped — lost on hard page reload — but refresh_token
-    // survives in localStorage. Refresh once and retry, mirroring `request`.
+    // The access-token cookie expired — refresh once and retry, mirroring
+    // `request`.
     if (await refreshAccessToken()) {
       resp = await attempt();
     }

@@ -1,9 +1,10 @@
 "use client";
+import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { api, setAccessToken } from "@/lib/api";
+import { api } from "@/lib/api";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -15,9 +16,7 @@ export default function LoginPage() {
     e.preventDefault();
     setError(null);
     try {
-      const tokens = await api.login(email, password);
-      setAccessToken(tokens.access_token);
-      localStorage.setItem("refresh_token", tokens.refresh_token);
+      await api.login(email, password);
       router.push("/learn");
     } catch {
       setError("Invalid email or password");
@@ -38,6 +37,12 @@ export default function LoginPage() {
         {error && <p className="text-red-600 text-sm">{error}</p>}
         <Button type="submit" className="w-full">Log in</Button>
       </form>
+      <p className="text-center text-sm text-zinc-600 dark:text-zinc-400">
+        New to Knovolve?{" "}
+        <Link href="/register" className="font-medium text-foreground underline-offset-4 hover:underline">
+          Create an account
+        </Link>
+      </p>
     </div>
   );
 }

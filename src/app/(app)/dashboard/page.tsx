@@ -3,6 +3,8 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/empty-state";
+import { BookOpen } from "lucide-react";
 import { api } from "@/lib/api";
 
 export default function DashboardPage() {
@@ -46,10 +48,13 @@ export default function DashboardPage() {
           <section className="space-y-3">
             <h2 className="text-lg font-semibold">Your courses</h2>
             {courses.length === 0 && (
-              <p className="text-zinc-500">
-                No courses yet — start one on the{" "}
-                <Link href="/learn" className="underline">Learn</Link> page.
-              </p>
+              <EmptyState
+                icon={BookOpen}
+                title="No courses yet"
+                description="Start with a topic — Knovolve builds a structured course for you in minutes."
+                actionLabel="Create a course"
+                actionHref="/learn"
+              />
             )}
             <div className="space-y-2">
               {courses.map((c) => (

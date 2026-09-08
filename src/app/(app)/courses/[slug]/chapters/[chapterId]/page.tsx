@@ -7,6 +7,16 @@ import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github-dark.css";
 import { api, ChapterContentEvent, ChapterContentSectionEvent } from "@/lib/api";
 
+// The LLM sometimes repeats the section heading as the first line of
+// body_markdown, which would otherwise render twice (once from our own <h2>,
+// once from ReactMarkdown). Drop it only when it duplicates section.heading.
+function stripLeadingDuplicateHeading(markdown: string, heading: string): string {
+  const match = markdown.match(/^\s*#{1,6}\s+(.+?)\s*\n/);
+  if (!match) return markdown;
+  if (match[1].trim().toLowerCase() !== heading.trim().toLowerCase()) return markdown;
+  return markdown.slice(match[0].length);
+}
+
 export default function ChapterPage() {
   const router = useRouter();
   const params = useParams<{ slug: string; chapterId: string }>();
@@ -15,7 +25,7 @@ export default function ChapterPage() {
   const startedFor = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!localStorage.getItem("refresh_token")) {
+    if (!api.isLoggedIn()) {
       router.push("/login");
       return;
     }
@@ -60,12 +70,16 @@ export default function ChapterPage() {
         <section key={section.order} className="space-y-3">
           <h2 className="text-xl font-semibold">{section.heading}</h2>
           <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
-            {section.body_markdown}
+            {stripLeadingDuplicateHeading(section.body_markdown, section.heading)}
           </ReactMarkdown>
           {section.examples.map((ex, i) => (
-            <div key={i} className="border-l-2 pl-3">
+            <div key={i} className="border-l-2 pl-3 space-y-1">
               <p className="font-medium">{ex.prompt}</p>
-              <p className="text-sm text-muted-foreground">{ex.walkthrough}</p>
+              <div className="text-sm text-muted-foreground">
+                <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
+                  {ex.walkthrough}
+                </ReactMarkdown>
+              </div>
             </div>
           ))}
           {section.diagram_status === "pending" && <p className="text-sm">Rendering diagram…</p>}

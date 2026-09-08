@@ -1,4 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect x="2" y="2" width="60" height="60" rx="14" fill="#0a0a0a"/>
-  <path d="M42 46V18l-18 20h20" stroke="#fafafa" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <rect x="2" y="2" width="60" height="60" rx="15" fill="#0a0a0a"/>
+  <g transform="translate(0 1.4) scale(2.6667)">
+    <path d="M12 5.75C9.2 5.55 7 7.2 6.1 9.6C5.25 11.75 5.5 14.1 6.1 15.9C6.7 17.4 8.1 18.05 10 18C10.7 17.97 11.4 17.8 12 17.55Z" fill="#8b5cf6"/>
+    <path d="M12 5.75C14.8 5.55 17 7.2 17.9 9.6C18.75 11.75 18.5 14.1 17.9 15.9C17.3 17.4 15.9 18.05 14 18C13.3 17.97 12.6 17.8 12 17.55Z" fill="#ec4899"/>
+    <g stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none">
+      <path d="M12 18V5"/>
+      <path d="M15 13.2a4 4 0 0 1-3-4.6 4 4 0 0 1-3 4.6"/>
+      <path d="M17.598 6.5A3 3 0 1 0 12 5a3 3 0 1 0-5.598 1.5"/>
+      <path d="M17.997 5.125a4 4 0 0 1 2.526 5.77"/>
+      <path d="M18 18a4 4 0 0 0 2-7.464"/>
+      <path d="M19.967 17.483A4 4 0 1 1 12 18a4 4 0 1 1-7.967-.517"/>
+      <path d="M6 18a4 4 0 0 1-2-7.464"/>
+      <path d="M6.003 5.125a4 4 0 0 0-2.526 5.77"/>
+      <path d="M7 9.6C8 8.9 9.1 9.1 10 9.9"/>
+      <path d="M17 9.6C16 8.9 14.9 9.1 14 9.9"/>
+      <path d="M6.8 14.8C8 14 9.3 14.3 10.6 15.2"/>
+      <path d="M17.2 14.8C16 14 14.7 14.3 13.4 15.2"/>
+    </g>
+  </g>
 </svg>

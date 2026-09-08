@@ -19,6 +19,9 @@ export const metadata: Metadata = {
     template: "%s · Knovolve",
   },
   description: "Adaptive AI-generated courses — pick a topic, learn structured content.",
+  icons: {
+    icon: "/icon.svg",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

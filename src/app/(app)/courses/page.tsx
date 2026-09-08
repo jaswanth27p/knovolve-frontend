@@ -5,6 +5,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/empty-state";
+import { BookOpen, Globe } from "lucide-react";
 import { api, TrackedCourse } from "@/lib/api";
 
 function CourseLink({ slug, children }: { slug: string; children: React.ReactNode }) {
@@ -88,7 +90,14 @@ export default function CoursesPage() {
         {myCourses.isLoading && <p className="text-zinc-500">Loading…</p>}
         {myCourses.isError && <p className="text-red-600">Failed to load courses.</p>}
         {myCourses.data?.length === 0 && (
-          <p className="text-zinc-500">You haven&apos;t started any courses yet.</p>
+          <EmptyState
+            icon={BookOpen}
+            title="No courses yet"
+            description="Generate your first course from any topic you want to learn."
+            actionLabel="Create a course"
+            actionHref="/learn"
+            compact
+          />
         )}
         <div className="space-y-2">
           {myCourses.data?.map((c) => <MyCard key={c.id} c={c} />)}
@@ -100,7 +109,12 @@ export default function CoursesPage() {
         {publicCourses.isLoading && <p className="text-zinc-500">Loading…</p>}
         {publicCourses.isError && <p className="text-red-600">Failed to load public courses.</p>}
         {publicCourses.data?.length === 0 && (
-          <p className="text-zinc-500">No public courses available.</p>
+          <EmptyState
+            icon={Globe}
+            title="No public courses available"
+            description="Courses become public here once they're generated."
+            compact
+          />
         )}
         <div className="space-y-2">
           {publicCourses.data?.map((c) => (

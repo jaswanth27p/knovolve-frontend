@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,7 @@ export default function RegisterPage() {
     setError(null);
     try {
       await api.register(email, password);
-      router.push("/login");
+      router.push("/learn");
     } catch {
       setError("Registration failed — email may already be taken");
     }
@@ -36,6 +37,12 @@ export default function RegisterPage() {
         {error && <p className="text-red-600 text-sm">{error}</p>}
         <Button type="submit" className="w-full">Register</Button>
       </form>
+      <p className="text-center text-sm text-zinc-600 dark:text-zinc-400">
+        Already have an account?{" "}
+        <Link href="/login" className="font-medium text-foreground underline-offset-4 hover:underline">
+          Log in
+        </Link>
+      </p>
     </div>
   );
 }
