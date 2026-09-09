@@ -173,6 +173,52 @@ async function refreshAccessToken(): Promise<boolean> {
   }
 }
 
+export interface AssignmentQuestion {
+  id: number;
+  order: number;
+  type: "mcq" | "true_false" | "free_text";
+  text: string;
+  options: string[] | null;
+  concept_tag: string;
+  difficulty: string;
+}
+
+export interface AssignmentStatus {
+  status: "generating" | "ready" | "failed";
+  questions: AssignmentQuestion[] | null;
+  error: string | null;
+}
+
+export interface SubmitAnswer {
+  question_id: number;
+  answer: string;
+}
+
+export interface AttemptSubmitResult {
+  attempt_id: number;
+  status: string;
+}
+
+export interface AttemptAnswerResult {
+  question_id: number;
+  is_correct: boolean;
+  feedback: string;
+}
+
+export interface ConceptScoreResult {
+  concept_tag: string;
+  correct: number;
+  total: number;
+}
+
+export interface AttemptStatus {
+  status: "grading" | "graded" | "failed";
+  overall_score: number | null;
+  answers: AttemptAnswerResult[] | null;
+  concept_scores: ConceptScoreResult[] | null;
+  error: string | null;
+}
+
 export const api = {
   register: (email: string, password: string): Promise<AuthResponse> =>
     request<AuthResponse>("/auth/register", { method: "POST", body: JSON.stringify({ email, password }) }),
@@ -193,6 +239,18 @@ export const api = {
   deleteMyCourse: (courseId: number): Promise<void> =>
     request<void>(`/me/courses/${courseId}`, { method: "DELETE" }),
   getCourse: (slug: string): Promise<CourseDetail> => request<CourseDetail>(`/courses/${slug}`),
+  getChapterAssignment: (slug: string, chapterId: number): Promise<AssignmentStatus> =>
+    request<AssignmentStatus>(`/courses/${slug}/chapters/${chapterId}/assignment`),
+  getModuleAssignment: (slug: string, moduleId: number): Promise<AssignmentStatus> =>
+    request<AssignmentStatus>(`/courses/${slug}/modules/${moduleId}/assignment`),
+  createModuleAssignment: (slug: string, moduleId: number): Promise<AssignmentStatus> =>
+    request<AssignmentStatus>(`/courses/${slug}/modules/${moduleId}/assignment`, { method: "POST" }),
+  submitAttempt: (slug: string, assignmentId: number, answers: SubmitAnswer[]): Promise<AttemptSubmitResult> =>
+    request<AttemptSubmitResult>(`/courses/${slug}/assignments/${assignmentId}/attempts`, {
+      method: "POST", body: JSON.stringify({ answers }),
+    }),
+  getAttempt: (slug: string, assignmentId: number, attemptId: number): Promise<AttemptStatus> =>
+    request<AttemptStatus>(`/courses/${slug}/assignments/${assignmentId}/attempts/${attemptId}`),
   streamChapterContent,
   logout,
   isLoggedIn,
