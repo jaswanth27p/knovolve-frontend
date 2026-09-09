@@ -49,6 +49,12 @@ export default function CourseDetailPage() {
                       </li>
                     ))}
                   </ul>
+                  <Link
+                    href={`/courses/${data.topic_slug}/modules/${m.id}/assignment`}
+                    className="mt-2 inline-block text-sm underline"
+                  >
+                    Module assignment
+                  </Link>
                 </CardContent>
               </Card>
             ))}
