@@ -13,6 +13,8 @@ export default function CourseDetailPage() {
     queryKey: ["course", params.slug],
     queryFn: () => api.getCourse(params.slug),
   });
+  const tracked = useQuery({ queryKey: ["my-courses"], queryFn: () => api.getMyCourses() });
+  const trackedCourse = tracked.data?.find((c) => c.topic_slug === params.slug);
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col space-y-6 px-6 py-10">
@@ -21,6 +23,29 @@ export default function CourseDetailPage() {
       {data && (
         <>
           <h1 className="text-2xl font-semibold tracking-tight">{data.topic_raw}</h1>
+          {trackedCourse && (
+            <div className="flex items-center justify-between rounded-md border border-black/10 p-4 dark:border-white/10">
+              <div>
+                <p className="text-sm font-medium">
+                  {trackedCourse.status === "completed" ? "Completed" : `In progress · ${Math.round(trackedCourse.progress * 100)}%`}
+                </p>
+                <div className="mt-1 h-1.5 w-40 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
+                  <div
+                    className="h-full rounded-full bg-zinc-900 dark:bg-zinc-100"
+                    style={{ width: `${Math.round(trackedCourse.progress * 100)}%` }}
+                  />
+                </div>
+              </div>
+              {data.modules[0]?.chapters[0] && (
+                <Link
+                  href={`/courses/${data.topic_slug}/chapters/${data.modules[0].chapters[0].id}`}
+                  className="rounded-md bg-zinc-900 px-3 py-1.5 text-sm text-white dark:bg-zinc-100 dark:text-zinc-900"
+                >
+                  {trackedCourse.progress > 0 ? "Resume" : "Start"}
+                </Link>
+              )}
+            </div>
+          )}
           {data.modules.length === 0 && (
             <EmptyState
               icon={Hourglass}
