@@ -14,7 +14,9 @@ export default function ChapterAssignmentPage() {
         slug={params.slug}
         assignmentId={chapterId}
         fetchAssignment={() => api.getChapterAssignment(params.slug, chapterId)}
-        resultsHref={(attemptId) => `/courses/${params.slug}/chapters/${chapterId}/assignment/results/${attemptId}`}
+        resultsHref={(assignmentId, attemptId) =>
+          `/courses/${params.slug}/chapters/${chapterId}/assignment/results/${assignmentId}/${attemptId}`
+        }
       />
     </div>
   );

@@ -22,7 +22,9 @@ export default function ModuleAssignmentPage() {
         slug={params.slug}
         assignmentId={moduleId}
         fetchAssignment={() => api.getModuleAssignment(params.slug, moduleId)}
-        resultsHref={(attemptId) => `/courses/${params.slug}/modules/${moduleId}/assignment/results/${attemptId}`}
+        resultsHref={(assignmentId, attemptId) =>
+          `/courses/${params.slug}/modules/${moduleId}/assignment/results/${assignmentId}/${attemptId}`
+        }
       />
     </div>
   );

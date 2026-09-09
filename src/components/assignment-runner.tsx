@@ -10,7 +10,7 @@ interface AssignmentRunnerProps {
   slug: string;
   assignmentId: number | null;
   fetchAssignment: () => Promise<AssignmentStatus>;
-  resultsHref: (attemptId: number) => string;
+  resultsHref: (assignmentId: number, attemptId: number) => string;
 }
 
 export function AssignmentRunner({ slug, assignmentId, fetchAssignment, resultsHref }: AssignmentRunnerProps) {
@@ -24,20 +24,24 @@ export function AssignmentRunner({ slug, assignmentId, fetchAssignment, resultsH
   });
 
   const submit = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
       const data = assignmentQuery.data;
       // The assignment's own id (not the `assignmentId` prop, which is only
       // the chapter/module id used for the React Query cache key) is what
       // submitAttempt needs — getChapterAssignment's URL is keyed by
       // chapterId, not Assignment.id, so the real id has to come from the
-      // fetch response itself.
+      // fetch response itself. It's also what the results page URL needs
+      // (module assignment ids are genuinely different from moduleId), so
+      // carry it alongside the submit result rather than re-deriving it
+      // later from a possibly-stale closure over assignmentQuery.data.
       if (!data?.questions || data.id === null) throw new Error("assignment not ready");
       const payload: SubmitAnswer[] = data.questions.map((q) => ({
         question_id: q.id, answer: answers[q.id] ?? "",
       }));
-      return api.submitAttempt(slug, data.id, payload);
+      const result = await api.submitAttempt(slug, data.id, payload);
+      return { ...result, assignmentId: data.id };
     },
-    onSuccess: (result) => router.push(resultsHref(result.attempt_id)),
+    onSuccess: (result) => router.push(resultsHref(result.assignmentId, result.attempt_id)),
   });
 
   const data = assignmentQuery.data;
