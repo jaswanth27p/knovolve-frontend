@@ -86,6 +86,10 @@ export interface Streak {
   longest: number;
 }
 
+export interface ChatReply {
+  reply: string;
+}
+
 export interface DashboardResponse {
   in_progress: TrackedCourse[];
   completed: TrackedCourse[];
@@ -268,6 +272,11 @@ export const api = {
     }),
   getAttempt: (slug: string, assignmentId: number, attemptId: number): Promise<AttemptStatus> =>
     request<AttemptStatus>(`/courses/${slug}/assignments/${assignmentId}/attempts/${attemptId}`),
+  sendChatMessage: (courseSlug: string | null, chapterId: number | null, message: string): Promise<ChatReply> =>
+    request<ChatReply>("/me/chat", {
+      method: "POST",
+      body: JSON.stringify({ course_slug: courseSlug, chapter_id: chapterId, message }),
+    }),
   streamChapterContent,
   logout,
   isLoggedIn,

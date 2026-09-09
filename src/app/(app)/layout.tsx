@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { BrandLogo, SidebarNav } from "@/components/sidebar-nav";
+import { FloatingChatbot } from "@/components/floating-chatbot";
 import {
   Sheet, SheetContent, SheetTitle, SheetTrigger,
 } from "@/components/ui/sheet";
@@ -33,6 +34,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
+    <>
     <div className="flex min-h-dvh">
       <aside
         className={cn(
@@ -107,5 +109,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <main className="flex flex-1 flex-col">{children}</main>
       </div>
     </div>
+    <FloatingChatbot />
+    </>
   );
 }
