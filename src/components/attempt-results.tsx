@@ -1,6 +1,8 @@
 "use client";
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { api } from "@/lib/api";
 
@@ -50,6 +52,36 @@ export function AttemptResults({ slug, assignmentId, attemptId }: AttemptResults
             </CardContent>
           </Card>
         ))}
+      </div>
+      <div className="pt-2">
+        {data.level === "chapter" && data.passed && data.next_chapter_id && (
+          <Button nativeButton={false} render={<Link href={`/courses/${slug}/chapters/${data.next_chapter_id}`} />}>
+            Next chapter →
+          </Button>
+        )}
+        {data.level === "chapter" && data.passed && !data.next_chapter_id && (
+          <Button nativeButton={false} render={<Link href={`/courses/${slug}`} />}>
+            🎉 Course complete — back to course
+          </Button>
+        )}
+        {data.level === "chapter" && !data.passed && data.chapter_id && (
+          <div className="space-y-2">
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+              We&apos;re putting together a shorter, targeted review covering what you missed.
+            </p>
+            <Button
+              nativeButton={false}
+              render={<Link href={`/courses/${slug}/chapters/${data.chapter_id}`} />}
+            >
+              Continue to review
+            </Button>
+          </div>
+        )}
+        {data.level === "module" && (
+          <Button variant="outline" nativeButton={false} render={<Link href={`/courses/${slug}`} />}>
+            Back to course
+          </Button>
+        )}
       </div>
     </div>
   );

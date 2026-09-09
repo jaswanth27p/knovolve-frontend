@@ -70,7 +70,7 @@ export default function DashboardPage() {
                     <CardContent className="space-y-2">
                       <div className="flex items-center gap-2">
                         <Badge variant={c.status === "completed" ? "secondary" : "default"}>
-                          {c.status}
+                          {c.status === "in_progress" ? "In progress" : c.status === "completed" ? "Completed" : c.status}
                         </Badge>
                         {c.content_ready && (
                           <span className="text-xs text-zinc-500">content ready</span>

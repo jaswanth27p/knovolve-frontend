@@ -23,7 +23,10 @@ export default function ChapterPage() {
   const params = useParams<{ slug: string; chapterId: string }>();
   const [sections, setSections] = useState<Record<number, ChapterContentSectionEvent>>({});
   const [error, setError] = useState<string | null>(null);
+  const [streamDone, setStreamDone] = useState(false);
+  const [remediating, setRemediating] = useState(false);
   const startedFor = useRef<string | null>(null);
+  const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!api.isLoggedIn()) {
@@ -35,31 +38,58 @@ export default function ChapterPage() {
     startedFor.current = key;
     setSections({});
     setError(null);
+    setStreamDone(false);
+    setRemediating(false);
 
-    api
-      .streamChapterContent(params.slug, Number(params.chapterId), (event: ChapterContentEvent) => {
-        if (event.type === "section_ready") {
-          setSections((prev) => ({ ...prev, [event.order]: event }));
-        } else if (event.type === "diagram_ready") {
-          setSections((prev) => {
-            const existing = prev[event.order];
-            if (!existing) return prev;
-            return {
-              ...prev,
-              [event.order]: { ...existing, diagram_status: "ready", diagram_image_url: event.diagram_image_url },
-            };
-          });
-        } else if (event.type === "diagram_failed") {
-          setSections((prev) => {
-            const existing = prev[event.order];
-            if (!existing) return prev;
-            return { ...prev, [event.order]: { ...existing, diagram_status: "failed" } };
-          });
-        } else if (event.type === "error") {
-          setError(event.message);
-        }
-      })
-      .catch(() => setError("Failed to load chapter content."));
+    function run() {
+      let sawGenerating = false;
+      api
+        .streamChapterContent(params.slug, Number(params.chapterId), (event: ChapterContentEvent) => {
+          if (event.type === "section_ready") {
+            setSections((prev) => ({ ...prev, [event.order]: event }));
+          } else if (event.type === "diagram_ready") {
+            setSections((prev) => {
+              const existing = prev[event.order];
+              if (!existing) return prev;
+              return {
+                ...prev,
+                [event.order]: { ...existing, diagram_status: "ready", diagram_image_url: event.diagram_image_url },
+              };
+            });
+          } else if (event.type === "diagram_failed") {
+            setSections((prev) => {
+              const existing = prev[event.order];
+              if (!existing) return prev;
+              return { ...prev, [event.order]: { ...existing, diagram_status: "failed" } };
+            });
+          } else if (event.type === "error") {
+            setError(event.message);
+          } else if (event.type === "done") {
+            setStreamDone(true);
+          } else if (event.type === "generating") {
+            sawGenerating = true;
+          }
+        })
+        .then(() => {
+          // A personalized review (v2+) is still being built by a background
+          // job — the backend deliberately doesn't hold this request open
+          // for it (see stream_chapter_content), so re-open the stream after
+          // a short delay until real sections show up. Bail out if the user
+          // has since navigated to a different chapter.
+          if (sawGenerating && startedFor.current === key) {
+            setRemediating(true);
+            retryTimer.current = setTimeout(run, 3000);
+          } else {
+            setStreamDone(true);
+          }
+        })
+        .catch(() => setError("Failed to load chapter content."));
+    }
+    run();
+
+    return () => {
+      if (retryTimer.current) clearTimeout(retryTimer.current);
+    };
   }, [params.slug, params.chapterId, router]);
 
   const ordered = Object.values(sections).sort((a, b) => a.order - b.order);
@@ -95,8 +125,12 @@ export default function ChapterPage() {
           )}
         </section>
       ))}
-      {ordered.length === 0 && !error && <p>Loading chapter…</p>}
-      {ordered.length > 0 && (
+      {ordered.length === 0 && !error && remediating && (
+        <p>Preparing a personalized review based on what you missed — this can take a minute…</p>
+      )}
+      {ordered.length === 0 && !error && !remediating && <p>Loading chapter…</p>}
+      {ordered.length > 0 && !streamDone && !error && <p className="text-sm text-muted-foreground">Finishing up…</p>}
+      {streamDone && (
         <div className="pt-6">
           <Link href={`/courses/${params.slug}/chapters/${params.chapterId}/assignment`} className="underline">
             Take the assignment
