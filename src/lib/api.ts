@@ -77,6 +77,13 @@ export interface TrackedCourse {
   module_count: number;
   chapter_count: number;
   content_ready: boolean;
+  weak_concept_count: number;
+  strong_concept_count: number;
+}
+
+export interface Streak {
+  current: number;
+  longest: number;
 }
 
 export interface DashboardResponse {
@@ -85,6 +92,7 @@ export interface DashboardResponse {
   in_progress_count: number;
   completed_count: number;
   total_count: number;
+  streak: Streak;
 }
 
 export interface PublicCourse {
@@ -221,8 +229,16 @@ export interface AttemptStatus {
 }
 
 export const api = {
-  register: (email: string, password: string): Promise<AuthResponse> =>
-    request<AuthResponse>("/auth/register", { method: "POST", body: JSON.stringify({ email, password }) }),
+  register: async (email: string, password: string): Promise<AuthResponse> => {
+    // Register auto-authenticates: the backend sets the httpOnly auth cookies
+    // on /auth/register, so the session is live immediately.
+    const result = await request<AuthResponse>("/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    });
+    setLoggedInFlag(true);
+    return result;
+  },
   login: async (email: string, password: string): Promise<AuthResponse> => {
     const result = await request<AuthResponse>("/auth/login", {
       method: "POST",

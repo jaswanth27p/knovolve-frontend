@@ -18,6 +18,7 @@ export default function DashboardPage() {
         { label: "Total courses", value: data.total_count },
         { label: "In progress", value: data.in_progress_count },
         { label: "Completed", value: data.completed_count },
+        { label: "Day streak", value: data.streak.current },
       ]
     : [];
 
@@ -32,7 +33,7 @@ export default function DashboardPage() {
 
       {data && (
         <>
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-4">
             {stats.map((s) => (
               <Card key={s.label}>
                 <CardHeader className="pb-2">
@@ -66,12 +67,26 @@ export default function DashboardPage() {
                         {c.module_count} modules · {c.chapter_count} chapters
                       </CardDescription>
                     </CardHeader>
-                    <CardContent>
-                      <Badge variant={c.status === "completed" ? "secondary" : "default"}>
-                        {c.status}
-                      </Badge>
-                      {c.content_ready && (
-                        <span className="ml-2 text-xs text-zinc-500">content ready</span>
+                    <CardContent className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Badge variant={c.status === "completed" ? "secondary" : "default"}>
+                          {c.status}
+                        </Badge>
+                        {c.content_ready && (
+                          <span className="text-xs text-zinc-500">content ready</span>
+                        )}
+                      </div>
+                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
+                        <div
+                          className="h-full rounded-full bg-zinc-900 dark:bg-zinc-100"
+                          style={{ width: `${Math.round(c.progress * 100)}%` }}
+                        />
+                      </div>
+                      {(c.weak_concept_count > 0 || c.strong_concept_count > 0) && (
+                        <div className="flex gap-2 text-xs text-zinc-500">
+                          {c.strong_concept_count > 0 && <span>{c.strong_concept_count} strong</span>}
+                          {c.weak_concept_count > 0 && <span>{c.weak_concept_count} weak</span>}
+                        </div>
                       )}
                     </CardContent>
                   </Card>
