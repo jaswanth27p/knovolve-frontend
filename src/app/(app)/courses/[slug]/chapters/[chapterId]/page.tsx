@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
@@ -95,6 +96,13 @@ export default function ChapterPage() {
         </section>
       ))}
       {ordered.length === 0 && !error && <p>Loading chapter…</p>}
+      {ordered.length > 0 && (
+        <div className="pt-6">
+          <Link href={`/courses/${params.slug}/chapters/${params.chapterId}/assignment`} className="underline">
+            Take the assignment
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

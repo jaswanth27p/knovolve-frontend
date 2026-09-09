@@ -185,6 +185,7 @@ export interface AssignmentQuestion {
 
 export interface AssignmentStatus {
   status: "generating" | "ready" | "failed";
+  id: number | null;
   questions: AssignmentQuestion[] | null;
   error: string | null;
 }
