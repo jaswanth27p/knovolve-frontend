@@ -1,4 +1,5 @@
 "use client";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Bar, BarChart, CartesianGrid, ComposedChart, Line, XAxis, YAxis } from "recharts";
 import {
@@ -38,6 +39,13 @@ export function ActivitySection() {
     queryFn: () => api.getActivity(DAYS),
   });
 
+  const events = data?.events;
+  const days = data?.days;
+  const series = useMemo(
+    () => (events && days != null ? buildActivitySeries(events, days) : []),
+    [events, days],
+  );
+
   if (isLoading) {
     return (
       <div className="grid gap-3 sm:grid-cols-2">
@@ -55,7 +63,6 @@ export function ActivitySection() {
     return <p className="text-sm text-red-600">Failed to load activity.</p>;
   }
 
-  const series = buildActivitySeries(data.events, data.days);
   const hasData = series.some((b) => b.assignments > 0);
   if (!hasData) {
     return (
@@ -71,7 +78,7 @@ export function ActivitySection() {
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       <ChartCard title="Activity · assignments per day">
-        <ChartContainer config={activityConfig}>
+        <ChartContainer config={activityConfig} style={{ aspectRatio: "auto", height: "100%" }}>
           <BarChart data={series}>
             <CartesianGrid vertical={false} className="stroke-black/10 dark:stroke-white/10" />
             <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} tick={{ fontSize: 11 }} />
@@ -83,7 +90,7 @@ export function ActivitySection() {
       </ChartCard>
 
       <ChartCard title="Mastery · chapters + avg score">
-        <ChartContainer config={masteryConfig}>
+        <ChartContainer config={masteryConfig} style={{ aspectRatio: "auto", height: "100%" }}>
           <ComposedChart data={series}>
             <CartesianGrid vertical={false} className="stroke-black/10 dark:stroke-white/10" />
             <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} tick={{ fontSize: 11 }} />

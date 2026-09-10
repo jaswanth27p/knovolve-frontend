@@ -48,5 +48,6 @@ describe("buildActivitySeries", () => {
     expect(out.find((b) => b.key === "2026-09-09")!.avgScore).toBeNull();
     expect(out.every((b) => b.assignments === 0)).toBe(false);
     expect(out[0].assignments).toBe(0);
+    expect(out.reduce((s, b) => s + b.assignments, 0)).toBe(1);
   });
 });

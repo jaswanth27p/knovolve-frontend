@@ -1,8 +1,6 @@
-export interface ActivityEvent {
-  at: string;
-  score: number;
-  passed: boolean;
-}
+import type { ActivityEvent } from "@/lib/api";
+
+export type { ActivityEvent };
 
 export interface ActivityBucket {
   key: string;        // YYYY-MM-DD (local)
