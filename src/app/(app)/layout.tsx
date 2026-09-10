@@ -2,6 +2,7 @@
 import { useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { BrandLogo, SidebarNav } from "@/components/sidebar-nav";
 import { FloatingChatbot } from "@/components/floating-chatbot";
@@ -16,6 +17,7 @@ const subscribe = () => () => {};
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const mounted = useSyncExternalStore(subscribe, () => true, () => false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
@@ -30,6 +32,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   async function handleLogout() {
     await api.logout();
+    // Cache is keyed by resource id, not user id — without this the next
+    // account to log in briefly sees the previous account's cached data
+    // (dashboard stats, courses) until each query refetches.
+    queryClient.clear();
     router.push("/login");
   }
 

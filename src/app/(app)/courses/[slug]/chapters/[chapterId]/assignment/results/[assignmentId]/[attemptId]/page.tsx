@@ -5,8 +5,8 @@ import { AttemptResults } from "@/components/attempt-results";
 export default function ChapterAssignmentResultsPage() {
   const params = useParams<{ slug: string; assignmentId: string; attemptId: string }>();
   return (
-    <div className="max-w-3xl mx-auto mt-12 space-y-6 pb-20">
-      <h1 className="text-xl font-semibold">Results</h1>
+    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col space-y-6 px-6 py-10">
+      <h1 className="text-2xl font-semibold tracking-tight">Results</h1>
       <AttemptResults
         slug={params.slug}
         assignmentId={Number(params.assignmentId)}

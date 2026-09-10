@@ -65,10 +65,55 @@ export interface CourseSummary {
 }
 
 export interface CourseJobResponse {
-  status: "exists" | "pending" | "running" | "succeeded" | "failed";
+  status: "exists" | "pending" | "running" | "succeeded" | "failed" | "similar";
   job_id: number | null;
   course: CourseSummary | null;
   error: string | null;
+  search_token: string | null;
+  candidates: CourseCandidate[] | null;
+}
+
+export interface CourseCandidate {
+  id: number;
+  topic_slug: string;
+  topic_raw: string;
+  similarity: number;
+  status: string;
+  course_url: string | null;
+  module_count: number | null;
+  chapter_count: number | null;
+}
+
+export interface MyCourseJob {
+  id: number;
+  topic_slug: string;
+  topic_raw: string;
+  status: "pending" | "running" | "succeeded" | "failed";
+  error: string | null;
+  course_slug: string | null;
+  created_at: string;
+}
+
+export interface ChapterVersionSummary {
+  version: number;
+  status: "generating" | "ready" | "failed";
+  created_at: string;
+  remediation_target_tags: string[] | null;
+}
+
+export interface ChapterVersionSection {
+  order: number;
+  heading: string;
+  kind: "intro" | "teaching";
+  body_markdown: string;
+  examples: ChapterContentExample[];
+  diagram_status: "pending" | "ready" | "failed" | null;
+  diagram_image_url: string | null;
+}
+
+export interface ChapterVersionDetail extends ChapterVersionSummary {
+  error: string | null;
+  sections: ChapterVersionSection[];
 }
 
 export interface TrackedCourse {
@@ -85,6 +130,34 @@ export interface TrackedCourse {
   strong_concept_count: number;
 }
 
+export type CourseSortField = "name" | "date" | "progress";
+export type SortOrder = "asc" | "desc";
+
+export interface MyCoursesParams {
+  search?: string;
+  status?: "in_progress" | "completed";
+  sort?: CourseSortField;
+  order?: SortOrder;
+  page?: number;
+  limit?: number;
+}
+
+export interface PublicCoursesParams {
+  search?: string;
+  sort?: Exclude<CourseSortField, "progress">;
+  order?: SortOrder;
+  page?: number;
+  limit?: number;
+}
+
+export interface Paginated<T> {
+  items: T[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
+}
+
 export interface Streak {
   current: number;
   longest: number;
@@ -93,6 +166,11 @@ export interface Streak {
 export interface ChatReply {
   reply: string;
 }
+
+export type ChatStreamEvent =
+  | { type: "token"; text: string }
+  | { type: "done" }
+  | { type: "error"; message: string };
 
 export interface DashboardResponse {
   in_progress: TrackedCourse[];
@@ -118,6 +196,7 @@ export interface PublicCourse {
   id: number;
   topic_slug: string;
   topic_raw: string;
+  created_at: string;
   module_count: number;
   chapter_count: number;
 }
@@ -148,6 +227,15 @@ function setLoggedInFlag(value: boolean) {
     // localStorage unavailable (SSR, privacy mode) - guards fall back to
     // the request-level 401 check instead.
   }
+}
+
+function toQueryString(params: object): string {
+  const search = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== "") search.set(key, String(value));
+  }
+  const qs = search.toString();
+  return qs ? `?${qs}` : "";
 }
 
 async function request<T>(path: string, options: RequestInit = {}, isRetry = false): Promise<T> {
@@ -227,6 +315,14 @@ export interface AttemptSubmitResult {
   status: string;
 }
 
+export interface AttemptSummary {
+  id: number;
+  status: "grading" | "graded" | "failed";
+  overall_score: number | null;
+  passed: boolean | null;
+  created_at: string;
+}
+
 export interface AttemptAnswerResult {
   question_id: number;
   is_correct: boolean;
@@ -270,19 +366,35 @@ export const api = {
     setLoggedInFlag(true);
     return result;
   },
-  createCourse: (topic: string): Promise<CourseJobResponse> =>
-    request<CourseJobResponse>("/courses", { method: "POST", body: JSON.stringify({ topic }) }),
+  createCourse: (topic: string, opts?: { force?: boolean; searchToken?: string }): Promise<CourseJobResponse> =>
+    request<CourseJobResponse>("/courses", {
+      method: "POST",
+      body: JSON.stringify({
+        topic,
+        ...(opts?.force ? { force: true } : {}),
+        ...(opts?.searchToken ? { search_token: opts.searchToken } : {}),
+      }),
+    }),
   getJob: (jobId: number): Promise<CourseJobResponse> => request<CourseJobResponse>(`/courses/jobs/${jobId}`),
+  getMyJobs: (): Promise<MyCourseJob[]> => request<MyCourseJob[]>("/courses/jobs"),
+  getChapterVersions: (slug: string, chapterId: number): Promise<ChapterVersionSummary[]> =>
+    request<ChapterVersionSummary[]>(`/courses/${slug}/chapters/${chapterId}/versions`),
+  getChapterVersion: (slug: string, chapterId: number, version: number): Promise<ChapterVersionDetail> =>
+    request<ChapterVersionDetail>(`/courses/${slug}/chapters/${chapterId}/versions/${version}`),
   getDashboard: (): Promise<DashboardResponse> => request<DashboardResponse>("/me/dashboard"),
   getActivity: (days = 14): Promise<ActivityResponse> =>
     request<ActivityResponse>(`/me/activity?days=${days}`),
-  getMyCourses: (): Promise<TrackedCourse[]> => request<TrackedCourse[]>("/me/courses"),
-  getPublicCourses: (): Promise<PublicCourse[]> => request<PublicCourse[]>("/courses"),
+  getMyCourses: (params: MyCoursesParams = {}): Promise<Paginated<TrackedCourse>> =>
+    request<Paginated<TrackedCourse>>(`/me/courses${toQueryString(params)}`),
+  getPublicCourses: (params: PublicCoursesParams = {}): Promise<Paginated<PublicCourse>> =>
+    request<Paginated<PublicCourse>>(`/courses${toQueryString(params)}`),
   deleteMyCourse: (courseId: number): Promise<void> =>
     request<void>(`/me/courses/${courseId}`, { method: "DELETE" }),
   getCourse: (slug: string): Promise<CourseDetail> => request<CourseDetail>(`/courses/${slug}`),
   getChapterAssignment: (slug: string, chapterId: number): Promise<AssignmentStatus> =>
     request<AssignmentStatus>(`/courses/${slug}/chapters/${chapterId}/assignment`),
+  getChapterVersionAssignment: (slug: string, chapterId: number, version: number): Promise<AssignmentStatus> =>
+    request<AssignmentStatus>(`/courses/${slug}/chapters/${chapterId}/versions/${version}/assignment`),
   getModuleAssignment: (slug: string, moduleId: number): Promise<AssignmentStatus> =>
     request<AssignmentStatus>(`/courses/${slug}/modules/${moduleId}/assignment`),
   createModuleAssignment: (slug: string, moduleId: number): Promise<AssignmentStatus> =>
@@ -291,6 +403,8 @@ export const api = {
     request<AttemptSubmitResult>(`/courses/${slug}/assignments/${assignmentId}/attempts`, {
       method: "POST", body: JSON.stringify({ answers }),
     }),
+  listAttempts: (slug: string, assignmentId: number): Promise<AttemptSummary[]> =>
+    request<AttemptSummary[]>(`/courses/${slug}/assignments/${assignmentId}/attempts`),
   getAttempt: (slug: string, assignmentId: number, attemptId: number): Promise<AttemptStatus> =>
     request<AttemptStatus>(`/courses/${slug}/assignments/${assignmentId}/attempts/${attemptId}`),
   sendChatMessage: (courseSlug: string | null, chapterId: number | null, message: string): Promise<ChatReply> =>
@@ -298,6 +412,7 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ course_slug: courseSlug, chapter_id: chapterId, message }),
     }),
+  streamChatMessage,
   streamChapterContent,
   logout,
   isLoggedIn,
@@ -320,15 +435,58 @@ export async function logout(): Promise<void> {
   setLoggedInFlag(false);
 }
 
+export async function streamChatMessage(
+  courseSlug: string | null,
+  chapterId: number | null,
+  message: string,
+  onEvent: (event: ChatStreamEvent) => void,
+  signal?: AbortSignal,
+): Promise<void> {
+  async function attempt(): Promise<Response> {
+    return fetch(`${API_BASE}/me/chat/stream`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...CSRF_HEADERS },
+      credentials: "include",
+      body: JSON.stringify({ course_slug: courseSlug, chapter_id: chapterId, message }),
+      signal,
+    });
+  }
+
+  let resp = await attempt();
+  if (resp.status === 401) {
+    if (await refreshAccessToken()) {
+      resp = await attempt();
+    }
+  }
+  if (!resp.ok || !resp.body) throw new Error(`${resp.status}: ${await resp.text()}`);
+
+  const reader = resp.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+    for (const line of lines) {
+      if (line.trim()) onEvent(JSON.parse(line) as ChatStreamEvent);
+    }
+  }
+  if (buffer.trim()) onEvent(JSON.parse(buffer) as ChatStreamEvent);
+}
+
 export async function streamChapterContent(
   courseSlug: string,
   chapterId: number,
   onEvent: (event: ChapterContentEvent) => void,
+  signal?: AbortSignal,
 ): Promise<void> {
   async function attempt(): Promise<Response> {
     return fetch(`${API_BASE}/courses/${courseSlug}/chapters/${chapterId}/content`, {
       headers: CSRF_HEADERS,
       credentials: "include",
+      signal,
     });
   }
 

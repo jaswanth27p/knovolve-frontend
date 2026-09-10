@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ResultsSkeleton } from "@/components/skeletons";
 import { api } from "@/lib/api";
 
 interface AttemptResultsProps {
@@ -19,17 +20,34 @@ export function AttemptResults({ slug, assignmentId, attemptId }: AttemptResults
     refetchInterval: (query) => (query.state.data?.status === "grading" ? 2000 : false),
   });
 
-  if (isLoading) return <p className="text-zinc-500">Loading results…</p>;
+  if (isLoading) return <ResultsSkeleton />;
   if (isError) return <p className="text-red-600">Failed to load results.</p>;
-  if (data?.status === "grading") return <p className="text-zinc-500">Grading…</p>;
+  if (data?.status === "grading") return (
+    <div className="space-y-4">
+      <ResultsSkeleton />
+      <p className="text-sm text-muted-foreground">Grading your answers — this only takes a moment.</p>
+    </div>
+  );
   if (data?.status === "failed") return <p className="text-red-600">Grading failed: {data.error}</p>;
   if (!data?.answers) return null;
 
+  const scorePct = Math.round((data.overall_score ?? 0) * 100);
+
   return (
     <div className="space-y-4">
-      <p className="text-lg font-semibold">
-        Score: {Math.round((data.overall_score ?? 0) * 100)}%
-      </p>
+      <Card>
+        <CardContent className="flex items-center justify-between gap-4 py-4">
+          <div>
+            <p className="text-3xl font-semibold tracking-tight">{scorePct}%</p>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">Overall score</p>
+          </div>
+          {data.passed !== null && (
+            <Badge variant={data.passed ? "secondary" : "outline"} className="text-sm">
+              {data.passed ? "Passed" : "Not passed"}
+            </Badge>
+          )}
+        </CardContent>
+      </Card>
       {data.concept_scores && (
         <div className="flex flex-wrap gap-2">
           {data.concept_scores.map((c) => (
