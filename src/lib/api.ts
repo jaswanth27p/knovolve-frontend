@@ -103,6 +103,17 @@ export interface DashboardResponse {
   streak: Streak;
 }
 
+export interface ActivityEvent {
+  at: string;    // ISO UTC timestamp (tz-aware backend datetime)
+  score: number; // 0.0-1.0
+  passed: boolean;
+}
+
+export interface ActivityResponse {
+  days: number;
+  events: ActivityEvent[];
+}
+
 export interface PublicCourse {
   id: number;
   topic_slug: string;
@@ -263,6 +274,8 @@ export const api = {
     request<CourseJobResponse>("/courses", { method: "POST", body: JSON.stringify({ topic }) }),
   getJob: (jobId: number): Promise<CourseJobResponse> => request<CourseJobResponse>(`/courses/jobs/${jobId}`),
   getDashboard: (): Promise<DashboardResponse> => request<DashboardResponse>("/me/dashboard"),
+  getActivity: (days = 14): Promise<ActivityResponse> =>
+    request<ActivityResponse>(`/me/activity?days=${days}`),
   getMyCourses: (): Promise<TrackedCourse[]> => request<TrackedCourse[]>("/me/courses"),
   getPublicCourses: (): Promise<PublicCourse[]> => request<PublicCourse[]>("/courses"),
   deleteMyCourse: (courseId: number): Promise<void> =>
