@@ -3,7 +3,10 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/empty-state";
+import { DashboardSkeleton, CourseListSkeleton } from "@/components/skeletons";
+import { ActivitySection } from "@/components/activity-section";
 import { BookOpen } from "lucide-react";
 import { api } from "@/lib/api";
 
@@ -11,6 +14,13 @@ export default function DashboardPage() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ["dashboard"],
     queryFn: () => api.getDashboard(),
+  });
+
+  // First page only — the /courses page owns filters + pagination now.
+  const coursesQuery = useQuery({
+    queryKey: ["myCourses", { page: 1, limit: 5, sort: "date", order: "desc" }],
+    queryFn: () =>
+      api.getMyCourses({ page: 1, limit: 5, sort: "date", order: "desc" }),
   });
 
   const stats = data
@@ -22,13 +32,13 @@ export default function DashboardPage() {
       ]
     : [];
 
-  const courses = data ? [...data.in_progress, ...data.completed] : [];
+  const courses = coursesQuery.data?.items ?? [];
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col space-y-6 px-6 py-10">
       <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
 
-      {isLoading && <p className="text-zinc-500">Loading…</p>}
+      {isLoading && <DashboardSkeleton />}
       {isError && <p className="text-red-600">Failed to load dashboard.</p>}
 
       {data && (
@@ -46,9 +56,20 @@ export default function DashboardPage() {
             ))}
           </div>
 
+          <ActivitySection />
+
           <section className="space-y-3">
-            <h2 className="text-lg font-semibold">Your courses</h2>
-            {courses.length === 0 && (
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Your courses</h2>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/courses" />}>View all</Button>
+                <Button size="sm" nativeButton={false} render={<Link href="/learn" />}>Create a course</Button>
+              </div>
+            </div>
+
+            {coursesQuery.isLoading && <CourseListSkeleton count={3} />}
+            {coursesQuery.isError && <p className="text-red-600">Failed to load courses.</p>}
+            {!coursesQuery.isLoading && !coursesQuery.isError && courses.length === 0 && (
               <EmptyState
                 icon={BookOpen}
                 title="No courses yet"
