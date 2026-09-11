@@ -134,7 +134,7 @@ export default function LearnPage() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center space-y-8 px-6 py-16">
+    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center justify-center space-y-8 px-6 py-16">
       <div className="space-y-1 text-center">
         <h1 className="text-2xl font-semibold tracking-tight">Learn something new</h1>
         <p className="text-sm text-zinc-600 dark:text-zinc-400">
@@ -143,8 +143,8 @@ export default function LearnPage() {
       </div>
 
       <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
+        <CardHeader className="text-center">
+          <CardTitle className="flex items-center justify-center gap-2 text-base">
             <Sparkles className="size-4" />
             What do you want to learn?
           </CardTitle>
