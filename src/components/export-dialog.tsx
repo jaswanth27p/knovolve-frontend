@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { api, parseExportApiError, type ExportJobStatus, type ExportKind } from "@/lib/api";
 import { notifyCourseStatusChanged } from "@/lib/export-status";
+import { CustomExportPanel } from "@/components/custom-export-panel";
 
 export const GENERATE_COURSE_EVENT = "knovolve:generate-course";
 
@@ -42,6 +43,7 @@ const STANDARD_OPTIONS: Array<{ kind: ExportKind; title: string; description: st
 ];
 
 function optionLabel(kind: ExportKind): string {
+  if (kind === "custom") return "Custom request";
   return STANDARD_OPTIONS.find((option) => option.kind === kind)?.title ?? "Export";
 }
 
@@ -150,6 +152,13 @@ export function ExportDialog({ slug }: { slug: string }) {
             Generate PDF
           </Button>
         </div>
+        <CustomExportPanel
+          slug={slug}
+          onQueued={(job) => {
+            setQueuedId(job.id);
+            notifyCourseStatusChanged(queryClient, slug);
+          }}
+        />
         {job && (
           <div className="rounded-md border border-black/10 p-3 text-sm dark:border-white/10">
             <p className="font-medium">{optionLabel(job.kind)}: {job.status}</p>
