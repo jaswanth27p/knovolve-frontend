@@ -5,13 +5,22 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { api, ExtensionJobStatus } from "@/lib/api";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { api, ExtensionChapter, ExtensionJobStatus } from "@/lib/api";
 
 export default function CourseExtendPage() {
   const params = useParams<{ slug: string }>();
   const queryClient = useQueryClient();
   const [message, setMessage] = useState("");
   const [jobId, setJobId] = useState<number | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ExtensionChapter | null>(null);
 
   const chaptersQuery = useQuery({
     queryKey: ["course-extension-chapters", params.slug],
@@ -49,8 +58,10 @@ export default function CourseExtendPage() {
 
   const deleteMutation = useMutation({
     mutationFn: (chapterId: number) => api.deleteCourseExtensionChapter(params.slug, chapterId),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["course-extension-chapters", params.slug] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["course-extension-chapters", params.slug] });
+      setDeleteTarget(null);
+    },
   });
 
   const running = createMutation.isPending || (jobQuery.status === "success" && jobId != null);
@@ -101,13 +112,37 @@ export default function CourseExtendPage() {
               <Link href={`/courses/${params.slug}/chapters/${c.id}`} className="text-sm text-zinc-600 hover:underline dark:text-zinc-400">
                 Open
               </Link>
-              <button onClick={() => deleteMutation.mutate(c.id)} aria-label="Delete chapter" title="Delete chapter">
+              <button onClick={() => setDeleteTarget(c)} aria-label="Delete chapter" title="Delete chapter">
                 <Trash2 className="size-4 text-zinc-400 hover:text-red-600" />
               </button>
             </div>
           </div>
         ))}
       </div>
+
+      <Dialog open={deleteTarget !== null} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete this chapter?</DialogTitle>
+            <DialogDescription>
+              {deleteTarget
+                ? `“${deleteTarget.title}” and any content, assignments, attempts, and versions under it will be permanently deleted. This can’t be undone.`
+                : ""}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2">
+            <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
+            <Button
+              variant="destructive"
+              disabled={deleteMutation.isPending}
+              onClick={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
+            >
+              {deleteMutation.isPending && <Loader2 className="size-4 animate-spin" />}
+              Delete chapter
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
