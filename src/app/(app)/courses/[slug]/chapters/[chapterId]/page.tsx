@@ -139,6 +139,14 @@ export default function ChapterPage() {
   const { viewVersion, nav } = useVersionNav(params.slug, chapterId);
   const viewingPast = viewVersion !== null;
 
+  // Resolve the module that owns this chapter so the top-nav back link goes
+  // to the module rather than the course.
+  const courseQuery = useQuery({
+    queryKey: ["course", params.slug],
+    queryFn: () => api.getCourse(params.slug),
+  });
+  const ownerModule = courseQuery.data?.modules.find((m) => m.chapters.some((c) => c.id === chapterId));
+
   const pastVersion = useQuery({
     queryKey: ["chapter-version", params.slug, chapterId, viewVersion],
     queryFn: () => api.getChapterVersion(params.slug, chapterId, viewVersion as number),
@@ -225,11 +233,15 @@ export default function ChapterPage() {
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col space-y-8 px-6 py-10 pb-20">
       <Link
-        href={`/courses/${params.slug}`}
+        href={
+          ownerModule
+            ? `/courses/${params.slug}/modules/${ownerModule.id}`
+            : `/courses/${params.slug}`
+        }
         className="flex w-fit items-center gap-1 text-sm text-zinc-600 hover:underline dark:text-zinc-400"
       >
         <ArrowLeft className="size-4" />
-        Back to course
+        {ownerModule ? "Back to module" : "Back to course"}
       </Link>
       {nav && <div>{nav}</div>}
 
