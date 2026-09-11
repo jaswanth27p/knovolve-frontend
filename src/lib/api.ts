@@ -205,6 +205,7 @@ export interface CourseDetailModule {
   id: number;
   title: string;
   objective: string;
+  is_additional?: boolean;
   chapters: { id: number; title: string; objective: string }[];
 }
 
@@ -347,6 +348,27 @@ export interface AttemptStatus {
   next_chapter_id: number | null;
 }
 
+export interface ExtensionChapterResult {
+  chapter_id: number;
+  title: string;
+  objective: string;
+}
+
+export interface ExtensionJobStatus {
+  status: "pending" | "running" | "succeeded" | "failed";
+  job_id: number | null;
+  error: string | null;
+  added: ExtensionChapterResult[] | null;
+}
+
+export interface ExtensionChapter {
+  id: number;
+  title: string;
+  objective: string;
+  order: number;
+  content_ready: boolean;
+}
+
 export const api = {
   register: async (email: string, password: string): Promise<AuthResponse> => {
     // Register auto-authenticates: the backend sets the httpOnly auth cookies
@@ -391,6 +413,16 @@ export const api = {
   deleteMyCourse: (courseId: number): Promise<void> =>
     request<void>(`/me/courses/${courseId}`, { method: "DELETE" }),
   getCourse: (slug: string): Promise<CourseDetail> => request<CourseDetail>(`/courses/${slug}`),
+  createCourseExtension: (slug: string, message: string): Promise<ExtensionJobStatus> =>
+    request<ExtensionJobStatus>(`/courses/${slug}/extensions`, {
+      method: "POST", body: JSON.stringify({ message }),
+    }),
+  getCourseExtensionJob: (slug: string, jobId: number): Promise<ExtensionJobStatus> =>
+    request<ExtensionJobStatus>(`/courses/${slug}/extensions/jobs/${jobId}`),
+  getCourseExtensionChapters: (slug: string): Promise<ExtensionChapter[]> =>
+    request<ExtensionChapter[]>(`/courses/${slug}/extensions/chapters`),
+  deleteCourseExtensionChapter: (slug: string, chapterId: number): Promise<void> =>
+    request<void>(`/courses/${slug}/extensions/chapters/${chapterId}`, { method: "DELETE" }),
   getChapterAssignment: (slug: string, chapterId: number): Promise<AssignmentStatus> =>
     request<AssignmentStatus>(`/courses/${slug}/chapters/${chapterId}/assignment`),
   getChapterVersionAssignment: (slug: string, chapterId: number, version: number): Promise<AssignmentStatus> =>
