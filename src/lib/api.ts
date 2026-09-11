@@ -369,6 +369,65 @@ export interface ExtensionChapter {
   content_ready: boolean;
 }
 
+export type ExportKind = "course" | "assignments" | "full_course" | "full_assignments" | "custom";
+
+export interface ExportJobStatus {
+  id: number;
+  kind: ExportKind;
+  status: "pending" | "running" | "succeeded" | "failed";
+  error: string | null;
+  created_at: string;
+  completed_at: string | null;
+  result_size: number | null;
+}
+
+export interface CourseReadiness {
+  status: "missing_content" | "missing_versions" | "missing_assignments" | "complete";
+  global_content_ready: boolean;
+  additional_content_ready: boolean;
+  versions_ready: boolean;
+  assignments_ready: boolean;
+}
+
+export interface GenerationUnitState {
+  unit_id: string;
+  kind: string;
+  chapter_id?: number;
+  content_id?: number;
+  module_id?: number;
+  status: "pending" | "running" | "done" | "failed";
+}
+
+export interface GenerationRunStatus {
+  id: number;
+  status: "pending" | "running" | "succeeded" | "failed";
+  total_units: number;
+  completed_units: number;
+  unit_states: GenerationUnitState[];
+  error: string | null;
+  action: "queued" | "already_complete" | "already_running" | null;
+}
+
+export interface ClarifyChatTurn {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface ClarifyPlan {
+  title: string;
+  output_kind: "summary" | "qa" | "cheat_sheet" | "custom";
+  length: "short" | "medium" | "long";
+  item_count: number | null;
+  notes: string | null;
+}
+
+export interface ClarifyResponse {
+  type: "clarifying" | "plan";
+  reply: string;
+  questions: string[];
+  plan: ClarifyPlan | null;
+}
+
 export const api = {
   register: async (email: string, password: string): Promise<AuthResponse> => {
     // Register auto-authenticates: the backend sets the httpOnly auth cookies
@@ -439,6 +498,49 @@ export const api = {
     request<AttemptSummary[]>(`/courses/${slug}/assignments/${assignmentId}/attempts`),
   getAttempt: (slug: string, assignmentId: number, attemptId: number): Promise<AttemptStatus> =>
     request<AttemptStatus>(`/courses/${slug}/assignments/${assignmentId}/attempts/${attemptId}`),
+  createExport: (slug: string, kind: ExportKind, params?: Record<string, unknown>): Promise<ExportJobStatus> =>
+    request<ExportJobStatus>(`/courses/${slug}/exports`, {
+      method: "POST",
+      body: JSON.stringify({ kind, ...(params ? { params } : {}) }),
+    }),
+  listExports: (slug: string): Promise<ExportJobStatus[]> =>
+    request<ExportJobStatus[]>(`/courses/${slug}/exports`),
+  getExport: (slug: string, exportId: number): Promise<ExportJobStatus> =>
+    request<ExportJobStatus>(`/courses/${slug}/exports/${exportId}`),
+  downloadExport: async (slug: string, exportId: number, filename: string): Promise<void> => {
+    async function attempt(): Promise<Response> {
+      return fetch(`${API_BASE}/courses/${slug}/exports/${exportId}/download`, {
+        headers: CSRF_HEADERS,
+        credentials: "include",
+      });
+    }
+
+    let resp = await attempt();
+    if (resp.status === 401 && (await refreshAccessToken())) {
+      resp = await attempt();
+    }
+    if (!resp.ok) throw new Error(`${resp.status}: ${await resp.text()}`);
+    const blob = await resp.blob();
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = filename;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  },
+  getCourseReadiness: (slug: string): Promise<CourseReadiness> =>
+    request<CourseReadiness>(`/courses/${slug}/readiness`),
+  queueCourseGeneration: (slug: string): Promise<GenerationRunStatus> =>
+    request<GenerationRunStatus>(`/courses/${slug}/generate`, { method: "POST" }),
+  getGenerationRun: (slug: string): Promise<GenerationRunStatus> =>
+    request<GenerationRunStatus>(`/courses/${slug}/generation`),
+  clarifyExport: (slug: string, message: string, history: ClarifyChatTurn[]): Promise<ClarifyResponse> =>
+    request<ClarifyResponse>(`/courses/${slug}/export-clarify`, {
+      method: "POST",
+      body: JSON.stringify({ message, history }),
+    }),
   sendChatMessage: (courseSlug: string | null, chapterId: number | null, message: string): Promise<ChatReply> =>
     request<ChatReply>("/me/chat", {
       method: "POST",
@@ -546,4 +648,35 @@ export async function streamChapterContent(
     }
   }
   if (buffer.trim()) onEvent(JSON.parse(buffer) as ChapterContentEvent);
+}
+
+export interface ExportApiError {
+  status: number;
+  code?: string;
+  message: string;
+}
+
+export function parseExportApiError(error: unknown): ExportApiError {
+  const fallback: ExportApiError = { status: 0, message: "Request failed. Please try again." };
+  if (!(error instanceof Error)) return fallback;
+  const separator = error.message.indexOf(": ");
+  if (separator < 0) return { ...fallback, message: error.message || fallback.message };
+  const status = Number(error.message.slice(0, separator));
+  const raw = error.message.slice(separator + 2);
+  if (!Number.isInteger(status)) return { ...fallback, message: error.message };
+  try {
+    const parsed = JSON.parse(raw) as { detail?: unknown };
+    if (typeof parsed.detail === "string") return { status, message: parsed.detail };
+    if (parsed.detail && typeof parsed.detail === "object") {
+      const detail = parsed.detail as { code?: unknown; message?: unknown };
+      return {
+        status,
+        code: typeof detail.code === "string" ? detail.code : undefined,
+        message: typeof detail.message === "string" ? detail.message : raw,
+      };
+    }
+  } catch {
+    // Fall through to the raw response text below.
+  }
+  return { status, message: raw || fallback.message };
 }
