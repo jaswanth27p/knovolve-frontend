@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { CheckCircle2, Loader2, Sparkles } from "lucide-react";
@@ -45,16 +45,29 @@ export function GenerateCourseButton({ slug }: { slug: string }) {
       toast.error(parseExportApiError(error).message);
     },
   });
+  const { mutate: generateCourse } = generateMutation;
 
   useEffect(() => {
     const handler = (event: Event) => {
       if (event instanceof CustomEvent && event.detail === slug) {
-        generateMutation.mutate();
+        generateCourse();
       }
     };
     window.addEventListener(GENERATE_COURSE_EVENT, handler);
     return () => window.removeEventListener(GENERATE_COURSE_EVENT, handler);
-  }, [generateMutation, slug]);
+  }, [generateCourse, slug]);
+
+  const runStatus = runQuery.data?.status;
+  const previousRunStatus = useRef(runStatus);
+  useEffect(() => {
+    const previous = previousRunStatus.current;
+    previousRunStatus.current = runStatus;
+    const wasActive = previous === "pending" || previous === "running";
+    const isTerminal = runStatus === "succeeded" || runStatus === "failed";
+    if (wasActive && isTerminal) {
+      notifyCourseStatusChanged(queryClient, slug);
+    }
+  }, [runStatus, queryClient, slug]);
 
   const run = runQuery.data;
   const active = run?.status === "pending" || run?.status === "running";
