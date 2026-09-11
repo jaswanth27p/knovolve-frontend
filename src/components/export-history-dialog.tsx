@@ -61,7 +61,7 @@ export function ExportHistoryDialog({ slug }: { slug: string }) {
   const jobs = jobsQuery.data ?? [];
 
   const retryMutation = useMutation({
-    mutationFn: (job: ExportJobStatus) => api.createExport(slug, job.kind),
+    mutationFn: (job: ExportJobStatus) => api.retryExport(slug, job.id),
     onSuccess: (created) => {
       notifyCourseStatusChanged(queryClient, slug);
       toast.success(`${jobLabel(created)} queued again.`);
@@ -74,7 +74,7 @@ export function ExportHistoryDialog({ slug }: { slug: string }) {
   async function download(job: ExportJobStatus) {
     setDownloadingId(job.id);
     try {
-      await api.downloadExport(slug, job.id, `${slug}-${job.kind}-${job.id}.pdf`);
+      api.downloadExport(slug, job.id);
       toast.success("PDF downloaded.");
     } catch (error) {
       toast.error(parseExportApiError(error).message);

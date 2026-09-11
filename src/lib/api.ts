@@ -507,35 +507,31 @@ export const api = {
     request<ExportJobStatus[]>(`/courses/${slug}/exports`),
   getExport: (slug: string, exportId: number): Promise<ExportJobStatus> =>
     request<ExportJobStatus>(`/courses/${slug}/exports/${exportId}`),
-  downloadExport: async (slug: string, exportId: number, filename: string): Promise<void> => {
-    async function attempt(): Promise<Response> {
-      return fetch(`${API_BASE}/courses/${slug}/exports/${exportId}/download`, {
-        headers: CSRF_HEADERS,
-        credentials: "include",
-      });
-    }
-
-    let resp = await attempt();
-    if (resp.status === 401 && (await refreshAccessToken())) {
-      resp = await attempt();
-    }
-    if (!resp.ok) throw new Error(`${resp.status}: ${await resp.text()}`);
-    const blob = await resp.blob();
-    const url = URL.createObjectURL(blob);
+  retryExport: (slug: string, exportId: number): Promise<ExportJobStatus> =>
+    request<ExportJobStatus>(`/courses/${slug}/exports/${exportId}/retry`, { method: "POST" }),
+  // The backend hands back a short-lived presigned storage URL rather than
+  // streaming bytes. We can't fetch the 302 directly: fetch() follows the
+  // redirect cross-origin with `credentials: "include"`, which CORS forbids
+  // when the storage endpoint replies `Access-Control-Allow-Origin: *`. A
+  // direct navigation can't work either because cookie-auth requires the CSRF
+  // header. Navigating to the presigned URL the authenticated JSON call
+  // returns sidesteps both; `response-content-disposition` (set server-side)
+  // forces the save-as filename.
+  downloadExport: async (slug: string, exportId: number): Promise<void> => {
+    const { url } = await request<{ url: string }>(`/courses/${slug}/exports/${exportId}/download-url`);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = filename;
+    anchor.rel = "noopener";
     document.body.appendChild(anchor);
     anchor.click();
     anchor.remove();
-    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   },
   getCourseReadiness: (slug: string): Promise<CourseReadiness> =>
     request<CourseReadiness>(`/courses/${slug}/readiness`),
   queueCourseGeneration: (slug: string): Promise<GenerationRunStatus> =>
     request<GenerationRunStatus>(`/courses/${slug}/generate`, { method: "POST" }),
-  getGenerationRun: (slug: string): Promise<GenerationRunStatus> =>
-    request<GenerationRunStatus>(`/courses/${slug}/generation`),
+  getGenerationRun: (slug: string): Promise<GenerationRunStatus | null> =>
+    request<GenerationRunStatus | null>(`/courses/${slug}/generation`),
   clarifyExport: (slug: string, message: string, history: ClarifyChatTurn[]): Promise<ClarifyResponse> =>
     request<ClarifyResponse>(`/courses/${slug}/export-clarify`, {
       method: "POST",
