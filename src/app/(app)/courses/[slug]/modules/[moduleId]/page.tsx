@@ -59,9 +59,11 @@ export default function ModuleDetailPage() {
             </CardContent>
           </Card>
 
-          <Button className="w-fit" nativeButton={false} render={<Link href={`/courses/${params.slug}/modules/${mod.id}/assignment`} />}>
-            Module assignment
-          </Button>
+          {!mod.is_additional && (
+            <Button className="w-fit" nativeButton={false} render={<Link href={`/courses/${params.slug}/modules/${mod.id}/assignment`} />}>
+              Module assignment
+            </Button>
+          )}
         </>
       )}
     </div>

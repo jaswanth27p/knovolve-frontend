@@ -40,14 +40,22 @@ export default function CourseDetailPage() {
                   />
                 </div>
               </div>
-              {data.modules[0]?.chapters[0] && (
+              <div className="flex gap-2">
+                {data.modules[0]?.chapters[0] && (
+                  <Link
+                    href={`/courses/${data.topic_slug}/chapters/${data.modules[0].chapters[0].id}`}
+                    className="rounded-md bg-zinc-900 px-3 py-1.5 text-sm text-white dark:bg-zinc-100 dark:text-zinc-900"
+                  >
+                    {trackedCourse.progress > 0 ? "Resume" : "Start"}
+                  </Link>
+                )}
                 <Link
-                  href={`/courses/${data.topic_slug}/chapters/${data.modules[0].chapters[0].id}`}
-                  className="rounded-md bg-zinc-900 px-3 py-1.5 text-sm text-white dark:bg-zinc-100 dark:text-zinc-900"
+                  href={`/courses/${params.slug}/extend`}
+                  className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-900"
                 >
-                  {trackedCourse.progress > 0 ? "Resume" : "Start"}
+                  Extend course
                 </Link>
-              )}
+              </div>
             </div>
           )}
           {data.modules.length === 0 && (
