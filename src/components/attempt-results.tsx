@@ -1,11 +1,13 @@
 "use client";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ResultsSkeleton } from "@/components/skeletons";
 import { api } from "@/lib/api";
+import { notifyCourseStatusChanged } from "@/lib/export-status";
 
 interface AttemptResultsProps {
   slug: string;
@@ -19,6 +21,15 @@ export function AttemptResults({ slug, assignmentId, attemptId }: AttemptResults
     queryFn: () => api.getAttempt(slug, assignmentId, attemptId),
     refetchInterval: (query) => (query.state.data?.status === "grading" ? 2000 : false),
   });
+
+  const queryClient = useQueryClient();
+  const previousAttemptStatus = useRef(data?.status);
+  useEffect(() => {
+    if (previousAttemptStatus.current === "grading" && data?.status !== "grading") {
+      notifyCourseStatusChanged(queryClient, slug);
+    }
+    previousAttemptStatus.current = data?.status;
+  }, [data?.status, queryClient, slug]);
 
   if (isLoading) return <ResultsSkeleton />;
   if (isError) return <p className="text-red-600">Failed to load results.</p>;

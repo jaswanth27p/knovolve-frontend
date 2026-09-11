@@ -7,6 +7,9 @@ import { EmptyState } from "@/components/empty-state";
 import { CourseDetailSkeleton } from "@/components/skeletons";
 import { Hourglass } from "lucide-react";
 import { api } from "@/lib/api";
+import { ExportDialog } from "@/components/export-dialog";
+import { ExportHistoryDialog } from "@/components/export-history-dialog";
+import { GenerateCourseButton } from "@/components/generate-course-button";
 
 export default function CourseDetailPage() {
   const params = useParams<{ slug: string }>();
@@ -27,6 +30,11 @@ export default function CourseDetailPage() {
       {data && (
         <>
           <h1 className="text-2xl font-semibold tracking-tight">{data.topic_raw}</h1>
+          <div className="flex flex-wrap items-center gap-2">
+            <ExportDialog slug={data.topic_slug} />
+            <ExportHistoryDialog slug={data.topic_slug} />
+            <GenerateCourseButton slug={data.topic_slug} />
+          </div>
           {trackedCourse && (
             <div className="flex items-center justify-between rounded-md border border-black/10 p-4 dark:border-white/10">
               <div>

@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
@@ -11,6 +11,7 @@ import "highlight.js/styles/github-dark.css";
 import { Button } from "@/components/ui/button";
 import { ChapterContentSkeleton } from "@/components/skeletons";
 import { api, ChapterContentEvent, ChapterContentSectionEvent, ChapterVersionSection } from "@/lib/api";
+import { notifyCourseStatusChanged } from "@/lib/export-status";
 
 // The LLM sometimes repeats the section heading as the first line of
 // body_markdown, which would otherwise render twice (once from our own <h2>,
@@ -116,6 +117,7 @@ export default function ChapterPage() {
   const router = useRouter();
   const params = useParams<{ slug: string; chapterId: string }>();
   const chapterId = Number(params.chapterId);
+  const queryClient = useQueryClient();
   const [sections, setSections] = useState<Record<number, ChapterContentSectionEvent>>({});
   const [error, setError] = useState<string | null>(null);
   const [streamDone, setStreamDone] = useState(false);
@@ -194,6 +196,7 @@ export default function ChapterPage() {
             setError(event.message);
           } else if (event.type === "done") {
             setStreamDone(true);
+            notifyCourseStatusChanged(queryClient, params.slug);
           } else if (event.type === "generating") {
             sawGenerating = true;
           }
@@ -225,7 +228,7 @@ export default function ChapterPage() {
       controller.abort();
       if (retryTimer.current) clearTimeout(retryTimer.current);
     };
-  }, [params.slug, params.chapterId, chapterId, router, viewingPast]);
+  }, [params.slug, params.chapterId, chapterId, queryClient, router, viewingPast]);
 
   const ordered = Object.values(sections).sort((a, b) => a.order - b.order);
   const pastOrdered = [...(pastVersion.data?.sections ?? [])].sort((a, b) => a.order - b.order);
