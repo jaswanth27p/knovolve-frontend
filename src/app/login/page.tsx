@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
+import { setCurrentAccount } from "@/lib/tracked-job";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -23,7 +24,8 @@ export default function LoginPage() {
       // silent token expiry that skipped the logout button) leaking into
       // this one.
       queryClient.clear();
-      router.push("/learn");
+      setCurrentAccount(email);
+      router.push("/dashboard");
     } catch {
       setError("Invalid email or password");
     }

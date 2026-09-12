@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
+import { setCurrentAccount } from "@/lib/tracked-job";
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -20,7 +21,8 @@ export default function RegisterPage() {
     try {
       await api.register(email, password);
       queryClient.clear();
-      router.push("/learn");
+      setCurrentAccount(email);
+      router.push("/dashboard");
     } catch {
       setError("Registration failed — email may already be taken");
     }

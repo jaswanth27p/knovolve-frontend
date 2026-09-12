@@ -10,6 +10,7 @@ import {
   Sheet, SheetContent, SheetTitle, SheetTrigger,
 } from "@/components/ui/sheet";
 import { api } from "@/lib/api";
+import { clearAuthTracking } from "@/lib/tracked-job";
 import { LogOut, Menu, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -36,6 +37,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     // account to log in briefly sees the previous account's cached data
     // (dashboard stats, courses) until each query refetches.
     queryClient.clear();
+    clearAuthTracking();
     router.push("/login");
   }
 

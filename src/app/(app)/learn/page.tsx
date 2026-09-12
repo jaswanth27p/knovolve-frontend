@@ -9,26 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { api, CourseCandidate, CourseJobResponse, MyCourseJob } from "@/lib/api";
-
-const TRACKED_JOB_KEY = "knovolve:learn:tracked_job_id";
-
-function readTrackedJobId(): number | null {
-  try {
-    const raw = localStorage.getItem(TRACKED_JOB_KEY);
-    return raw ? Number(raw) : null;
-  } catch {
-    return null;
-  }
-}
-
-function writeTrackedJobId(jobId: number | null) {
-  try {
-    if (jobId === null) localStorage.removeItem(TRACKED_JOB_KEY);
-    else localStorage.setItem(TRACKED_JOB_KEY, String(jobId));
-  } catch {
-    // localStorage unavailable — the box just won't survive a navigation away and back.
-  }
-}
+import { readTrackedJobId, writeTrackedJobId } from "@/lib/tracked-job";
 
 function jobStatusLabel(status: string): string {
   switch (status) {
@@ -100,9 +81,22 @@ export default function LearnPage() {
     queryKey: ["job", jobId],
     queryFn: () => api.getJob(jobId as number),
     enabled: jobId !== null,
+    retry: false,
     refetchInterval: (query) =>
       query.state.data?.status === "pending" || query.state.data?.status === "running" ? 2000 : false,
   });
+
+  // A tracked job that no longer resolves (stale localStorage ID after a DB
+  // reset, or a dedup job that finished and got pruned) must not strand the
+  // page on a phantom "Queued" box — drop it so the form is usable again.
+  // Only 404s clear: transient network errors keep the tracking + error text.
+  useEffect(() => {
+    const msg = jobStatus.error instanceof Error ? jobStatus.error.message : "";
+    if (jobStatus.isError && jobId !== null && msg.startsWith("404")) {
+      writeTrackedJobId(null);
+      setJobId(null);
+    }
+  }, [jobStatus.isError, jobStatus.error, jobId]);
 
   useEffect(() => {
     if (jobStatus.data?.status === "succeeded" && jobStatus.data.course) {
@@ -218,7 +212,7 @@ export default function LearnPage() {
               <div className="flex items-center gap-2 text-sm">
                 <JobBadge status={jobStatus.data?.status ?? "pending"} />
                 <span className="text-zinc-600 dark:text-zinc-400">
-                  {jobStatus.isLoading && !jobStatus.data ? "Starting…" : jobStatus.data?.status === "failed" ? jobStatus.data.error ?? "Generation failed" : "Building your course…"}
+                  {jobStatus.isLoading && !jobStatus.data ? "Starting…" : jobStatus.data?.status === "failed" ? jobStatus.data.error ?? "Generation failed" : "Building your course… usually takes around 6 minutes."}
                 </span>
               </div>
               {jobStatus.data?.status === "failed" && (
