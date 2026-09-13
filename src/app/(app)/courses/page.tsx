@@ -15,10 +15,6 @@ import { useDebouncedValue } from "@/lib/use-debounced-value";
 
 const PAGE_SIZE = 10;
 
-function CourseLink({ slug, children }: { slug: string; children: React.ReactNode }) {
-  return <Link href={`/courses/${slug}`}>{children}</Link>;
-}
-
 const MY_SORT_OPTIONS = [
   { value: "date" as const, label: "Recently opened", order: "desc" as const },
   { value: "name" as const, label: "Name (A-Z)", order: "asc" as const },
@@ -91,8 +87,9 @@ export default function CoursesPage() {
     onMutate: (id) => {
       setPendingIds((prev) => new Set(prev).add(id));
       setRemoveErrors((prev) => {
-        const { [id]: _omit, ...rest } = prev;
-        return rest;
+        const next = { ...prev };
+        delete next[id];
+        return next;
       });
     },
     onSuccess: () => {
@@ -119,11 +116,14 @@ export default function CoursesPage() {
     const isPending = pendingIds.has(c.id);
     const error = removeErrors[c.id];
     return (
-      <Card>
+      <Card className="relative transition-shadow hover:shadow">
+        <Link
+          href={`/courses/${c.topic_slug}`}
+          className="absolute inset-0 z-10 rounded-xl"
+          aria-label={c.topic_raw}
+        />
         <CardHeader className="pb-2">
-          <CourseLink slug={c.topic_slug}>
-            <CardTitle className="text-base hover:underline">{c.topic_raw}</CardTitle>
-          </CourseLink>
+          <CardTitle className="text-base">{c.topic_raw}</CardTitle>
           <CardDescription>
             {c.module_count} modules · {c.chapter_count} chapters
           </CardDescription>
@@ -134,14 +134,14 @@ export default function CoursesPage() {
           <Button
             variant="ghost"
             size="sm"
-            className="ml-auto text-zinc-500"
+            className="relative z-20 ml-auto text-zinc-500"
             disabled={isPending}
             onClick={() => remove.mutate(c.id)}
           >
             Remove
           </Button>
         </CardContent>
-        {error && <p className="px-6 pb-3 text-sm text-red-600">Failed to remove course: {error}</p>}
+        {error && <p className="relative z-20 px-6 pb-3 text-sm text-red-600">Failed to remove course: {error}</p>}
       </Card>
     );
   }
@@ -230,11 +230,14 @@ export default function CoursesPage() {
         )}
         <div className="space-y-2">
           {publicCourses.data?.items.map((c) => (
-            <Card key={c.id}>
+            <Card key={c.id} className="relative transition-shadow hover:shadow">
+              <Link
+                href={`/courses/${c.topic_slug}`}
+                className="absolute inset-0 z-10 rounded-xl"
+                aria-label={c.topic_raw}
+              />
               <CardHeader className="pb-2">
-                <CourseLink slug={c.topic_slug}>
-                  <CardTitle className="text-base hover:underline">{c.topic_raw}</CardTitle>
-                </CourseLink>
+                <CardTitle className="text-base">{c.topic_raw}</CardTitle>
                 <CardDescription>
                   {c.module_count} modules · {c.chapter_count} chapters
                 </CardDescription>
