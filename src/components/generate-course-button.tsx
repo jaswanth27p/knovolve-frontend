@@ -75,7 +75,11 @@ export function GenerateCourseButton({ slug }: { slug: string }) {
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <Button disabled={generateMutation.isPending || active} onClick={() => generateMutation.mutate()}>
+      <Button
+        className="h-auto min-h-8 max-w-full whitespace-normal text-center"
+        disabled={generateMutation.isPending || active}
+        onClick={() => generateMutation.mutate()}
+      >
         {generateMutation.isPending || active ? (
           <Loader2 className="size-4 animate-spin" />
         ) : (
