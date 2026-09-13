@@ -359,6 +359,9 @@ export interface ExtensionJobStatus {
   job_id: number | null;
   error: string | null;
   added: ExtensionChapterResult[] | null;
+  request: string | null;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 export interface ExtensionChapter {
@@ -478,6 +481,14 @@ export const api = {
     }),
   getCourseExtensionJob: (slug: string, jobId: number): Promise<ExtensionJobStatus> =>
     request<ExtensionJobStatus>(`/courses/${slug}/extensions/jobs/${jobId}`),
+  // Latest extension job for this course/user, any status — lets the extend
+  // page re-attach to an in-flight job after navigating away and back.
+  getLatestCourseExtensionJob: (slug: string): Promise<ExtensionJobStatus | null> =>
+    request<ExtensionJobStatus | null>(`/courses/${slug}/extensions/jobs/latest`),
+  // All of this user's extension jobs for the course, newest first. DB-backed,
+  // so in-flight work survives a reload or logout/login.
+  listCourseExtensionJobs: (slug: string): Promise<ExtensionJobStatus[]> =>
+    request<ExtensionJobStatus[]>(`/courses/${slug}/extensions/jobs`),
   getCourseExtensionChapters: (slug: string): Promise<ExtensionChapter[]> =>
     request<ExtensionChapter[]>(`/courses/${slug}/extensions/chapters`),
   deleteCourseExtensionChapter: (slug: string, chapterId: number): Promise<void> =>

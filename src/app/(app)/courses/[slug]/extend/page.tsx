@@ -13,13 +13,26 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { api, ExtensionChapter, ExtensionJobStatus } from "@/lib/api";
+import { api, ExtensionChapter } from "@/lib/api";
+
+const EXTENSION_STATUS_LABEL: Record<string, string> = {
+  pending: "Queued",
+  running: "Running",
+  succeeded: "Done",
+  failed: "Failed",
+};
+
+const EXTENSION_STATUS_CLASS: Record<string, string> = {
+  pending: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200",
+  running: "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200",
+  succeeded: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200",
+  failed: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200",
+};
 
 export default function CourseExtendPage() {
   const params = useParams<{ slug: string }>();
   const queryClient = useQueryClient();
   const [message, setMessage] = useState("");
-  const [jobId, setJobId] = useState<number | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ExtensionChapter | null>(null);
 
   const chaptersQuery = useQuery({
@@ -27,31 +40,32 @@ export default function CourseExtendPage() {
     queryFn: () => api.getCourseExtensionChapters(params.slug),
   });
 
-  const jobQuery = useQuery({
-    queryKey: ["course-extension-job", params.slug, jobId],
-    queryFn: () => api.getCourseExtensionJob(params.slug, jobId as number),
-    enabled: jobId != null,
-    refetchInterval: (query) => {
-      const status = query.state.data?.status;
-      return status === "succeeded" || status === "failed" ? false : 1500;
-    },
+  // Derive the in-flight state from the DB-backed job list rather than a
+  // component-local id, so returning to this page (or logging out and back in)
+  // re-attaches to a still-running extension instead of losing the loading
+  // state or hitting a 409 on re-submit.
+  const jobsQuery = useQuery({
+    queryKey: ["course-extension-jobs", params.slug],
+    queryFn: () => api.listCourseExtensionJobs(params.slug),
+    refetchInterval: (query) =>
+      (query.state.data ?? []).some((j) => j.status === "pending" || j.status === "running") ? 1500 : false,
   });
+  const jobs = jobsQuery.data ?? [];
+  const activeJob = jobs.find((j) => j.status === "pending" || j.status === "running") ?? null;
+  const lastJob = jobs[0] ?? null;
 
-  // TanStack Query v5 has no onSuccess on useQuery: poll completion is
-  // handled here instead (clear jobId + refresh chapters on terminal status).
+  // TanStack Query v5 has no onSuccess on useQuery: refresh the chapter list
+  // whenever the most recent job reaches a successful terminal state.
   useEffect(() => {
-    const status = jobQuery.data?.status;
-    if ((status === "succeeded" || status === "failed") && jobId != null) {
+    if (lastJob?.status === "succeeded") {
       queryClient.invalidateQueries({ queryKey: ["course-extension-chapters", params.slug] });
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setJobId(null);
     }
-  }, [jobQuery.data?.status, jobId, params.slug, queryClient]);
+  }, [lastJob?.status, params.slug, queryClient]);
 
   const createMutation = useMutation({
     mutationFn: () => api.createCourseExtension(params.slug, message),
-    onSuccess: (data: ExtensionJobStatus) => {
-      if (data.job_id != null) setJobId(data.job_id);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["course-extension-jobs", params.slug] });
       setMessage("");
     },
   });
@@ -64,7 +78,9 @@ export default function CourseExtendPage() {
     },
   });
 
-  const running = createMutation.isPending || (jobQuery.status === "success" && jobId != null);
+  const running = createMutation.isPending || activeJob !== null;
+  const conflict = createMutation.isError && createMutation.error instanceof Error
+    && createMutation.error.message.startsWith("409");
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col space-y-6 px-6 py-10">
@@ -91,13 +107,63 @@ export default function CourseExtendPage() {
           {createMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
           Generate chapters
         </Button>
-        {createMutation.isError && <p className="text-sm text-red-600">Failed to start generation.</p>}
-        {running && <p className="text-sm text-zinc-500">Generating… new chapters will appear here when done.</p>}
-        {jobQuery.isError && <p className="text-sm text-red-600">Failed to load job status.</p>}
-        {jobQuery.data?.status === "failed" && (
-          <p className="text-sm text-red-600">{jobQuery.data.error ?? "Extension failed."}</p>
+        {conflict && (
+          <p className="text-sm text-red-600">An extension is already running for this course.</p>
+        )}
+        {createMutation.isError && !conflict && (
+          <p className="text-sm text-red-600">Failed to start generation.</p>
+        )}
+        {jobsQuery.isError && <p className="text-sm text-red-600">Failed to load job status.</p>}
+        {!activeJob && lastJob?.status === "failed" && (
+          <p className="text-sm text-red-600">{lastJob.error ?? "Extension failed."}</p>
+        )}
+        {!activeJob && lastJob?.status === "succeeded" && lastJob.added?.length === 0 && (
+          <p className="text-sm text-zinc-500">
+            No new chapters were needed — that topic looks like it&apos;s already covered in this course.
+          </p>
         )}
       </div>
+
+      {jobs.length > 0 && (
+        <div className="space-y-2">
+          <h2 className="text-lg font-semibold">Extension requests</h2>
+          <p className="text-sm text-zinc-500">
+            {activeJob
+              ? "Still running — you can leave this page. It keeps going and re-attaches when you return."
+              : "Your recent requests for this course."}
+          </p>
+          <div className="space-y-2">
+            {jobs.map((j, i) => (
+              <div
+                key={j.job_id ?? i}
+                className="flex items-start justify-between gap-3 rounded-md border border-black/10 p-3 dark:border-white/10"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm">{j.request ?? "Extension request"}</p>
+                  <p className="text-xs text-zinc-500">
+                    {j.created_at ? new Date(j.created_at).toLocaleString() : ""}
+                    {j.status === "succeeded" && j.added
+                      ? ` · ${j.added.length} chapter${j.added.length === 1 ? "" : "s"} added`
+                      : ""}
+                    {j.status === "failed" && j.error ? ` · ${j.error}` : ""}
+                  </p>
+                </div>
+                <span
+                  className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-xs ${
+                    EXTENSION_STATUS_CLASS[j.status] ??
+                    "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+                  }`}
+                >
+                  {(j.status === "pending" || j.status === "running") && (
+                    <Loader2 className="size-3 animate-spin" />
+                  )}
+                  {EXTENSION_STATUS_LABEL[j.status] ?? j.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="space-y-2">
         <h2 className="text-lg font-semibold">Your added chapters</h2>
