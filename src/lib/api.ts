@@ -170,7 +170,19 @@ export interface ChatReply {
 export type ChatStreamEvent =
   | { type: "token"; text: string }
   | { type: "done" }
+  | { type: "context"; bundle: unknown }
   | { type: "error"; message: string };
+
+export interface ChatRouteContext {
+  page: "dashboard" | "course" | "chapter_content" | "assignment" | "attempt_review";
+  course_slug: string | null;
+  chapter_id: number | null;
+}
+
+export interface ChatHistoryTurn {
+  role: "user" | "assistant";
+  content: string;
+}
 
 export interface DashboardResponse {
   in_progress: TrackedCourse[];
@@ -577,9 +589,10 @@ export async function logout(): Promise<void> {
 }
 
 export async function streamChatMessage(
-  courseSlug: string | null,
-  chapterId: number | null,
+  route: ChatRouteContext,
   message: string,
+  history: ChatHistoryTurn[],
+  context: unknown | null,
   onEvent: (event: ChatStreamEvent) => void,
   signal?: AbortSignal,
 ): Promise<void> {
@@ -588,7 +601,11 @@ export async function streamChatMessage(
       method: "POST",
       headers: { "Content-Type": "application/json", ...CSRF_HEADERS },
       credentials: "include",
-      body: JSON.stringify({ course_slug: courseSlug, chapter_id: chapterId, message }),
+      // Must match the backend ChatRequest schema: `current_route` (not bare
+      // course_slug/chapter_id) is what scopes the context bundle to the page
+      // the learner is on. `history` and the first turn's `context` bundle are
+      // resent each turn because the server is stateless.
+      body: JSON.stringify({ message, history, context: context ?? undefined, current_route: route }),
       signal,
     });
   }

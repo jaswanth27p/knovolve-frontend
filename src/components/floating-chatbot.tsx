@@ -1,12 +1,14 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, usePathname } from "next/navigation";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { MessageCircle, SquarePen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
 } from "@/components/ui/sheet";
-import { api } from "@/lib/api";
+import { api, ChatHistoryTurn, ChatRouteContext } from "@/lib/api";
 
 interface ChatTurn {
   role: "user" | "assistant";
@@ -23,6 +25,22 @@ export function FloatingChatbot() {
   const [input, setInput] = useState("");
   const [turns, setTurns] = useState<ChatTurn[]>([]);
   const [sending, setSending] = useState(false);
+  // Cached learner-context bundle from the first turn; resent on later turns
+  // because the server is stateless. Cleared on "start a new chat".
+  const [contextBundle, setContextBundle] = useState<unknown | null>(null);
+
+  // Scope the assistant to the page the learner is on (chapter content,
+  // assignment, course, or dashboard). This is what lets "explain this
+  // chapter" work without the learner naming the chapter.
+  const route = useMemo<ChatRouteContext>(() => {
+    const courseSlug = params.slug ?? null;
+    const chapterId = params.chapterId ? Number(params.chapterId) : null;
+    let page: ChatRouteContext["page"] = "dashboard";
+    if (pathname.includes("/assignment")) page = "assignment";
+    else if (chapterId !== null) page = "chapter_content";
+    else if (courseSlug) page = "course";
+    return { page, course_slug: courseSlug, chapter_id: chapterId };
+  }, [params.slug, params.chapterId, pathname]);
 
   // Guards a still-running stream from writing into state after the user
   // has started a new chat or closed the sheet — abort() alone doesn't stop
@@ -40,6 +58,7 @@ export function FloatingChatbot() {
     setTurns([]);
     setInput("");
     setSending(false);
+    setContextBundle(null);
   }
 
   useEffect(() => {
@@ -64,6 +83,9 @@ export function FloatingChatbot() {
     if (!message || sending) return;
 
     setInput("");
+    // Snapshot prior turns as the history to resend (the server keeps no
+    // session state), then render the new user turn instantly.
+    const history: ChatHistoryTurn[] = turns.map((t) => ({ role: t.role, content: t.text }));
     // The user's turn renders the instant this handler runs — it never
     // waits on the network — and the assistant slot shows its own loading
     // state until the first streamed token arrives.
@@ -76,12 +98,15 @@ export function FloatingChatbot() {
 
     try {
       await api.streamChatMessage(
-        params.slug ?? null,
-        params.chapterId ? Number(params.chapterId) : null,
+        route,
         message,
+        history,
+        contextBundle,
         (event) => {
           if (generation.current !== myGeneration) return;
-          if (event.type === "token") {
+          if (event.type === "context") {
+            setContextBundle(event.bundle);
+          } else if (event.type === "token") {
             updateLastAssistantTurn((turn) => ({ ...turn, text: turn.text + event.text }));
           } else if (event.type === "error") {
             updateLastAssistantTurn(() => ({ role: "assistant", text: event.message, status: "error" }));
@@ -133,24 +158,22 @@ export function FloatingChatbot() {
         <div className="flex-1 space-y-3 overflow-y-auto px-4">
           {turns.map((t, i) => (
             <div key={i} className={t.role === "user" ? "text-right" : ""}>
-              <p
-                className={
-                  t.role === "user"
-                    ? "inline-block text-sm"
-                    : t.status === "error"
-                      ? "text-sm text-red-600"
-                      : "text-sm text-zinc-600 dark:text-zinc-400"
-                }
-              >
-                {t.text}
-                {t.status === "streaming" && t.text === "" && (
-                  <span className="inline-flex items-center gap-1 align-middle">
-                    <span className="size-1.5 animate-bounce rounded-full bg-current [animation-delay:-0.3s]" />
-                    <span className="size-1.5 animate-bounce rounded-full bg-current [animation-delay:-0.15s]" />
-                    <span className="size-1.5 animate-bounce rounded-full bg-current" />
-                  </span>
-                )}
-              </p>
+              {t.role === "user" ? (
+                <p className="inline-block text-sm">{t.text}</p>
+              ) : t.status === "error" ? (
+                <p className="text-sm text-red-600">{t.text}</p>
+              ) : (
+                <div className="space-y-2 text-sm text-zinc-600 dark:text-zinc-400 [&_a]:underline [&_code]:rounded [&_code]:bg-black/5 [&_code]:px-1 [&_ol]:list-decimal [&_ol]:pl-5 [&_pre]:overflow-x-auto [&_ul]:list-disc [&_ul]:pl-5">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{t.text}</ReactMarkdown>
+                  {t.status === "streaming" && t.text === "" && (
+                    <span className="inline-flex items-center gap-1 align-middle">
+                      <span className="size-1.5 animate-bounce rounded-full bg-current [animation-delay:-0.3s]" />
+                      <span className="size-1.5 animate-bounce rounded-full bg-current [animation-delay:-0.15s]" />
+                      <span className="size-1.5 animate-bounce rounded-full bg-current" />
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           ))}
         </div>
