@@ -90,13 +90,18 @@ export default function LearnPage() {
   // reset, or a dedup job that finished and got pruned) must not strand the
   // page on a phantom "Queued" box — drop it so the form is usable again.
   // Only 404s clear: transient network errors keep the tracking + error text.
-  useEffect(() => {
-    const msg = jobStatus.error instanceof Error ? jobStatus.error.message : "";
-    if (jobStatus.isError && jobId !== null && msg.startsWith("404")) {
-      writeTrackedJobId(null);
-      setJobId(null);
-    }
-  }, [jobStatus.isError, jobStatus.error, jobId]);
+  // Adjusting state during render (rather than in an effect) is the documented
+  // React pattern for deriving state from a query change and avoids a
+  // cascading render (react-hooks/set-state-in-effect).
+  const trackedJobMissing =
+    jobStatus.isError && jobId !== null && jobStatus.error instanceof Error
+    && jobStatus.error.message.startsWith("404");
+  const [clearedMissingJobId, setClearedMissingJobId] = useState<number | null>(null);
+  if (trackedJobMissing && clearedMissingJobId !== jobId) {
+    setClearedMissingJobId(jobId);
+    writeTrackedJobId(null);
+    setJobId(null);
+  }
 
   useEffect(() => {
     if (jobStatus.data?.status === "succeeded" && jobStatus.data.course) {
@@ -142,7 +147,7 @@ export default function LearnPage() {
             <Sparkles className="size-4" />
             What do you want to learn?
           </CardTitle>
-          <CardDescription>Takes a couple of minutes — you can leave this page and come back.</CardDescription>
+          <CardDescription>Takes around 10–15 minutes — you can leave this page and come back.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <form
@@ -212,7 +217,7 @@ export default function LearnPage() {
               <div className="flex items-center gap-2 text-sm">
                 <JobBadge status={jobStatus.data?.status ?? "pending"} />
                 <span className="text-zinc-600 dark:text-zinc-400">
-                  {jobStatus.isLoading && !jobStatus.data ? "Starting…" : jobStatus.data?.status === "failed" ? jobStatus.data.error ?? "Generation failed" : "Building your course… usually takes around 6 minutes."}
+                  {jobStatus.isLoading && !jobStatus.data ? "Starting…" : jobStatus.data?.status === "failed" ? jobStatus.data.error ?? "Generation failed" : "Building your course… usually takes around 10–15 minutes."}
                 </span>
               </div>
               {jobStatus.data?.status === "failed" && (

@@ -73,7 +73,7 @@ export default function DashboardPage() {
               <EmptyState
                 icon={BookOpen}
                 title="No courses yet"
-                description="Start with a topic — Knovolve builds a structured course for you in minutes."
+                description="Start with a topic — Knovolve builds a structured course for you in about 10–15 minutes."
                 actionLabel="Create a course"
                 actionHref="/learn"
               />
