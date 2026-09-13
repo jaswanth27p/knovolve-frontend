@@ -13,13 +13,16 @@ import { buildActivitySeries } from "@/lib/activity";
 
 const DAYS = 14;
 
+// The theme tokens are `oklch(...)` (Tailwind v4), so use them directly —
+// wrapping them in `hsl(...)` makes the value invalid and the browser falls
+// back to black (invisible on the dark background).
 const activityConfig = {
-  assignments: { label: "Assignments", color: "hsl(var(--foreground))" },
+  assignments: { label: "Assignments", color: "var(--foreground)" },
 } satisfies ChartConfig;
 
 const masteryConfig = {
-  chaptersCompleted: { label: "Chapters", color: "hsl(var(--muted-foreground))" },
-  avgScore: { label: "Avg score", color: "hsl(var(--foreground))" },
+  chaptersCompleted: { label: "Chapters", color: "var(--muted-foreground)" },
+  avgScore: { label: "Avg score", color: "var(--foreground)" },
 } satisfies ChartConfig;
 
 function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
