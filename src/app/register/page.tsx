@@ -5,8 +5,11 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { api } from "@/lib/api";
+import { api, parseExportApiError } from "@/lib/api";
 import { setCurrentAccount } from "@/lib/tracked-job";
+import { useRedirectIfLoggedIn } from "@/lib/use-auth-redirect";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -14,19 +17,38 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const queryClient = useQueryClient();
+  // Already signed in? Skip the form and go to the dashboard.
+  const alreadyAuthed = useRedirectIfLoggedIn();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    if (!EMAIL_RE.test(email.trim())) {
+      setError("Enter a valid email address.");
+      return;
+    }
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
     try {
       await api.register(email, password);
       queryClient.clear();
       setCurrentAccount(email);
       router.push("/dashboard");
-    } catch {
-      setError("Registration failed — email may already be taken");
+    } catch (err) {
+      const { status } = parseExportApiError(err);
+      if (status === 409) {
+        setError("That email is already registered. Try logging in instead.");
+      } else if (status === 422) {
+        setError("Enter a valid email address and a password of at least 8 characters.");
+      } else {
+        setError("Registration failed. Please try again.");
+      }
     }
   }
+
+  if (alreadyAuthed) return null;
 
   return (
     <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center space-y-6 px-6">

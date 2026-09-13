@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { api } from "@/lib/api";
+import { api, parseExportApiError } from "@/lib/api";
 import { setCurrentAccount } from "@/lib/tracked-job";
+import { useRedirectIfLoggedIn } from "@/lib/use-auth-redirect";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -14,10 +15,16 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const queryClient = useQueryClient();
+  // Already signed in? Skip the form and go to the dashboard.
+  const alreadyAuthed = useRedirectIfLoggedIn();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    if (!email.trim() || !password) {
+      setError("Enter your email and password.");
+      return;
+    }
     try {
       await api.login(email, password);
       // Guards against a stale cache from a previous session (e.g. a
@@ -26,10 +33,17 @@ export default function LoginPage() {
       queryClient.clear();
       setCurrentAccount(email);
       router.push("/dashboard");
-    } catch {
-      setError("Invalid email or password");
+    } catch (err) {
+      const { status } = parseExportApiError(err);
+      if (status === 401 || status === 422) {
+        setError("Invalid email or password.");
+      } else {
+        setError("Something went wrong. Please try again.");
+      }
     }
   }
+
+  if (alreadyAuthed) return null;
 
   return (
     <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center space-y-6 px-6">
