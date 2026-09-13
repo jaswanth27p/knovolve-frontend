@@ -39,7 +39,7 @@ export default function DashboardPage() {
       <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
 
       {isLoading && <DashboardSkeleton />}
-      {isError && <p className="text-red-600">Failed to load dashboard.</p>}
+      {isError && <p className="text-destructive">Failed to load dashboard.</p>}
 
       {data && (
         <>
@@ -68,7 +68,7 @@ export default function DashboardPage() {
             </div>
 
             {coursesQuery.isLoading && <CourseListSkeleton count={3} />}
-            {coursesQuery.isError && <p className="text-red-600">Failed to load courses.</p>}
+            {coursesQuery.isError && <p className="text-destructive">Failed to load courses.</p>}
             {!coursesQuery.isLoading && !coursesQuery.isError && courses.length === 0 && (
               <EmptyState
                 icon={BookOpen}
@@ -94,17 +94,17 @@ export default function DashboardPage() {
                           {c.status === "in_progress" ? "In progress" : c.status === "completed" ? "Completed" : c.status}
                         </Badge>
                         {c.content_ready && (
-                          <span className="text-xs text-zinc-500">content ready</span>
+                          <span className="text-xs text-muted-foreground">content ready</span>
                         )}
                       </div>
-                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800">
+                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
                         <div
-                          className="h-full rounded-full bg-zinc-900 dark:bg-zinc-100"
+                          className="h-full rounded-full bg-brand-gradient"
                           style={{ width: `${Math.round(c.progress * 100)}%` }}
                         />
                       </div>
                       {(c.weak_concept_count > 0 || c.strong_concept_count > 0) && (
-                        <div className="flex gap-2 text-xs text-zinc-500">
+                        <div className="flex gap-2 text-xs text-muted-foreground">
                           {c.strong_concept_count > 0 && <span>{c.strong_concept_count} strong</span>}
                           {c.weak_concept_count > 0 && <span>{c.weak_concept_count} weak</span>}
                         </div>

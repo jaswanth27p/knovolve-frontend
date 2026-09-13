@@ -17,7 +17,7 @@ export default function ChapterVersionAssignmentPage() {
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col space-y-6 px-6 py-10">
       <Link
         href={`/courses/${params.slug}/chapters/${chapterId}/versions/${version}`}
-        className="flex w-fit items-center gap-1 text-sm text-zinc-600 hover:underline dark:text-zinc-400"
+        className="flex w-fit items-center gap-1 text-sm text-muted-foreground hover:underline dark:text-muted-foreground"
       >
         <ArrowLeft className="size-4" />
         Back to version {version}

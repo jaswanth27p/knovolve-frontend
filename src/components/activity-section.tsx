@@ -17,12 +17,12 @@ const DAYS = 14;
 // wrapping them in `hsl(...)` makes the value invalid and the browser falls
 // back to black (invisible on the dark background).
 const activityConfig = {
-  assignments: { label: "Assignments", color: "var(--foreground)" },
+  assignments: { label: "Assignments", color: "var(--chart-1)" },
 } satisfies ChartConfig;
 
 const masteryConfig = {
-  chaptersCompleted: { label: "Chapters", color: "var(--muted-foreground)" },
-  avgScore: { label: "Avg score", color: "var(--foreground)" },
+  chaptersCompleted: { label: "Chapters", color: "var(--chart-1)" },
+  avgScore: { label: "Avg score", color: "var(--chart-2)" },
 } satisfies ChartConfig;
 
 function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
@@ -63,7 +63,7 @@ export function ActivitySection() {
   }
 
   if (isError || !data) {
-    return <p className="text-sm text-red-600">Failed to load activity.</p>;
+    return <p className="text-sm text-destructive">Failed to load activity.</p>;
   }
 
   const hasData = series.some((b) => b.assignments > 0);
@@ -71,7 +71,7 @@ export function ActivitySection() {
     return (
       <Card>
         <CardHeader className="pb-2"><CardDescription>Activity</CardDescription></CardHeader>
-        <div className="px-6 pb-5 text-sm text-zinc-600 dark:text-zinc-400">
+        <div className="px-6 pb-5 text-sm text-muted-foreground">
           No activity in the last 14 days.
         </div>
       </Card>
@@ -83,7 +83,7 @@ export function ActivitySection() {
       <ChartCard title="Activity · assignments per day">
         <ChartContainer config={activityConfig} style={{ aspectRatio: "auto", height: "100%" }}>
           <BarChart data={series}>
-            <CartesianGrid vertical={false} className="stroke-black/10 dark:stroke-white/10" />
+            <CartesianGrid vertical={false} className="stroke-border" />
             <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} tick={{ fontSize: 11 }} />
             <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={24} tick={{ fontSize: 11 }} />
             <ChartTooltip content={<ChartTooltipContent />} cursor={{ fill: "rgba(0,0,0,0.05)" }} />
@@ -95,7 +95,7 @@ export function ActivitySection() {
       <ChartCard title="Mastery · chapters + avg score">
         <ChartContainer config={masteryConfig} style={{ aspectRatio: "auto", height: "100%" }}>
           <ComposedChart data={series}>
-            <CartesianGrid vertical={false} className="stroke-black/10 dark:stroke-white/10" />
+            <CartesianGrid vertical={false} className="stroke-border" />
             <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} tick={{ fontSize: 11 }} />
             <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={24} tick={{ fontSize: 11 }} />
             <YAxis yAxisId="score" orientation="right" domain={[0, 1]} tickLine={false} axisLine={false} width={28} tick={{ fontSize: 11 }} />

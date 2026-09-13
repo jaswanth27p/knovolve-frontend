@@ -96,7 +96,7 @@ export function GenerateCourseButton({ slug }: { slug: string }) {
         </Badge>
       )}
       {run?.status === "failed" && (
-        <span className="text-xs text-red-600">{run.error ?? "Course generation failed. Please try again."}</span>
+        <span className="text-xs text-destructive">{run.error ?? "Course generation failed. Please try again."}</span>
       )}
     </div>
   );

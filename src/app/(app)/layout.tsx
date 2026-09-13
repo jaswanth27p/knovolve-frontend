@@ -46,12 +46,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-dvh">
       <aside
         className={cn(
-          "relative hidden shrink-0 flex-col border-r border-black/10 dark:border-white/10 md:flex",
+          "relative hidden shrink-0 flex-col border-r border-border bg-sidebar/70 backdrop-blur-xl md:flex",
           collapsed ? "w-16" : "w-64",
           "h-dvh sticky top-0"
         )}
       >
-        <div className="relative flex h-14 shrink-0 items-center border-b border-black/10 px-3 dark:border-white/10">
+        <div className="relative flex h-14 shrink-0 items-center border-b border-border px-3">
           <Link
             href="/dashboard"
             className={cn(
@@ -76,7 +76,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="flex-1 overflow-y-auto px-3 py-3">
           <SidebarNav collapsed={collapsed} />
         </div>
-        <div className="mt-auto shrink-0 border-t border-black/10 p-3 dark:border-white/10">
+        <div className="mt-auto shrink-0 border-t border-border p-3">
           <Button
             variant="ghost"
             onClick={handleLogout}
@@ -90,7 +90,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 items-center justify-between border-b border-black/10 px-4 md:hidden dark:border-white/10">
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/70 px-4 backdrop-blur-xl md:hidden">
           <Link href="/dashboard" className="flex items-center gap-2">
             <BrandLogo className="size-7 text-foreground" />
             <span className="text-lg font-semibold tracking-tight">Knovolve</span>

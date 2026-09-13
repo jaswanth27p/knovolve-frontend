@@ -32,14 +32,14 @@ export function AttemptResults({ slug, assignmentId, attemptId }: AttemptResults
   }, [data?.status, queryClient, slug]);
 
   if (isLoading) return <ResultsSkeleton />;
-  if (isError) return <p className="text-red-600">Failed to load results.</p>;
+  if (isError) return <p className="text-destructive">Failed to load results.</p>;
   if (data?.status === "grading") return (
     <div className="space-y-4">
       <ResultsSkeleton />
       <p className="text-sm text-muted-foreground">Grading your answers — this only takes a moment.</p>
     </div>
   );
-  if (data?.status === "failed") return <p className="text-red-600">Grading failed: {data.error}</p>;
+  if (data?.status === "failed") return <p className="text-destructive">Grading failed: {data.error}</p>;
   if (!data?.answers) return null;
 
   const scorePct = Math.round((data.overall_score ?? 0) * 100);
@@ -50,7 +50,7 @@ export function AttemptResults({ slug, assignmentId, attemptId }: AttemptResults
         <CardContent className="flex items-center justify-between gap-4 py-4">
           <div>
             <p className="text-3xl font-semibold tracking-tight">{scorePct}%</p>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">Overall score</p>
+            <p className="text-sm text-muted-foreground">Overall score</p>
           </div>
           {data.passed !== null && (
             <Badge variant={data.passed ? "secondary" : "outline"} className="text-sm">
@@ -77,7 +77,7 @@ export function AttemptResults({ slug, assignmentId, attemptId }: AttemptResults
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-zinc-600 dark:text-zinc-400">{a.feedback}</p>
+              <p className="text-sm text-muted-foreground">{a.feedback}</p>
             </CardContent>
           </Card>
         ))}
@@ -95,7 +95,7 @@ export function AttemptResults({ slug, assignmentId, attemptId }: AttemptResults
         )}
         {data.level === "chapter" && !data.passed && data.chapter_id && (
           <div className="space-y-2">
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="text-sm text-muted-foreground">
               We&apos;re putting together a shorter, targeted review covering what you missed.
             </p>
             <Button

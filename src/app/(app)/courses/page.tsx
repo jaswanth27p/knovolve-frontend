@@ -130,18 +130,18 @@ export default function CoursesPage() {
         </CardHeader>
         <CardContent className="flex items-center gap-2">
           <Badge variant={c.status === "completed" ? "secondary" : "default"}>{c.status}</Badge>
-          {c.content_ready && <span className="text-xs text-zinc-500">content ready</span>}
+          {c.content_ready && <span className="text-xs text-muted-foreground">content ready</span>}
           <Button
             variant="ghost"
             size="sm"
-            className="relative z-20 ml-auto text-zinc-500"
+            className="relative z-20 ml-auto text-muted-foreground"
             disabled={isPending}
             onClick={() => remove.mutate(c.id)}
           >
             Remove
           </Button>
         </CardContent>
-        {error && <p className="relative z-20 px-6 pb-3 text-sm text-red-600">Failed to remove course: {error}</p>}
+        {error && <p className="relative z-20 px-6 pb-3 text-sm text-destructive">Failed to remove course: {error}</p>}
       </Card>
     );
   }
@@ -170,7 +170,7 @@ export default function CoursesPage() {
           onStatusFilterChange={setMyStatus}
         />
         {myCourses.isLoading && <CourseListSkeleton />}
-        {myCourses.isError && <p className="text-red-600">Failed to load courses.</p>}
+        {myCourses.isError && <p className="text-destructive">Failed to load courses.</p>}
         {myCourses.data?.items.length === 0 && !myHasFilters && (
           <EmptyState
             icon={BookOpen}
@@ -211,7 +211,7 @@ export default function CoursesPage() {
           }}
         />
         {publicCourses.isLoading && <CourseListSkeleton count={3} />}
-        {publicCourses.isError && <p className="text-red-600">Failed to load public courses.</p>}
+        {publicCourses.isError && <p className="text-destructive">Failed to load public courses.</p>}
         {publicCourses.data?.items.length === 0 && !pubHasFilters && (
           <EmptyState
             icon={Globe}

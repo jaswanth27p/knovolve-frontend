@@ -20,10 +20,10 @@ export default function GlobalError({
     <html lang="en" className="dark h-full antialiased">
       <body className="flex min-h-full flex-col items-center justify-center gap-4 px-6 text-center">
         <h2 className="text-lg font-semibold">Something went wrong</h2>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">Please try again.</p>
+        <p className="text-sm text-muted-foreground">Please try again.</p>
         <button
           onClick={reset}
-          className="rounded-md border border-black/10 px-4 py-2 text-sm dark:border-white/10"
+          className="rounded-md border border-border px-4 py-2 text-sm dark:border-border"
         >
           Try again
         </button>

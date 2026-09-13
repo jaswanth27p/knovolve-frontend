@@ -21,13 +21,13 @@ export default function ModuleDetailPage() {
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col space-y-6 px-6 py-10">
       {isLoading && <ModuleDetailSkeleton />}
-      {isError && <p className="text-red-600">Failed to load module.</p>}
-      {data && !mod && <p className="text-red-600">Module not found.</p>}
+      {isError && <p className="text-destructive">Failed to load module.</p>}
+      {data && !mod && <p className="text-destructive">Module not found.</p>}
       {mod && (
         <>
           <Link
             href={`/courses/${params.slug}`}
-            className="flex w-fit items-center gap-1 text-sm text-zinc-600 hover:underline dark:text-zinc-400"
+            className="flex w-fit items-center gap-1 text-sm text-muted-foreground hover:underline dark:text-muted-foreground"
           >
             <ArrowLeft className="size-4" />
             Back to course
@@ -35,7 +35,7 @@ export default function ModuleDetailPage() {
 
           <div className="space-y-1">
             <h1 className="text-2xl font-semibold tracking-tight">{mod.title}</h1>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">{mod.objective}</p>
+            <p className="text-sm text-muted-foreground">{mod.objective}</p>
           </div>
 
           <Card>
@@ -48,9 +48,9 @@ export default function ModuleDetailPage() {
                   <li key={c.id}>
                     <Link
                       href={`/courses/${params.slug}/chapters/${c.id}`}
-                      className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                      className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted dark:hover:bg-muted"
                     >
-                      <span className="text-zinc-400 dark:text-zinc-500">{i + 1}.</span>
+                      <span className="text-muted-foreground dark:text-muted-foreground">{i + 1}.</span>
                       {c.title}
                     </Link>
                   </li>

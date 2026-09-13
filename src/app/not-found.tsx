@@ -10,10 +10,10 @@ export const metadata: Metadata = {
 export default function NotFound() {
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center gap-4 px-6 py-20 text-center">
-      <SearchX className="size-8 text-zinc-500" />
+      <SearchX className="size-8 text-muted-foreground" />
       <div className="space-y-1">
         <h1 className="text-lg font-semibold">Page not found</h1>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="text-sm text-muted-foreground">
           The page you are looking for doesn&apos;t exist or has moved.
         </p>
       </div>

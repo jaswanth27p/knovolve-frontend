@@ -3,21 +3,41 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 export default function Loading() {
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center justify-center space-y-8 px-6 py-16">
-      <div className="w-full max-w-md space-y-2 text-center">
-        <Skeleton className="mx-auto h-8 w-64" />
-        <Skeleton className="mx-auto h-4 w-72" />
+    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col space-y-10 px-6 py-10">
+      <div className="space-y-4 text-center">
+        <div className="mx-auto flex size-11 items-center justify-center rounded-2xl bg-muted" />
+        <div className="space-y-2">
+          <Skeleton className="mx-auto h-9 w-72" />
+          <Skeleton className="mx-auto h-4 w-80" />
+        </div>
+        <Card className="mx-auto w-full max-w-xl">
+          <CardContent className="space-y-4">
+            <Skeleton className="h-8 w-full" />
+            <div className="flex flex-wrap gap-2">
+              {[0, 1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-7 w-28 rounded-lg" />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-2 text-center">
-          <Skeleton className="mx-auto h-5 w-48" />
-          <Skeleton className="mx-auto h-4 w-56" />
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-9 w-full" />
-        </CardContent>
-      </Card>
+      <div className="space-y-4">
+        <Skeleton className="h-6 w-52" />
+        <div className="grid gap-3 sm:grid-cols-3">
+          {[0, 1, 2].map((i) => (
+            <Card key={i}>
+              <CardHeader>
+                <Skeleton className="size-9 rounded-full" />
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-4 w-full" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

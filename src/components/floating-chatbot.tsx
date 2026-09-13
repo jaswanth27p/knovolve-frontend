@@ -161,9 +161,9 @@ export function FloatingChatbot() {
               {t.role === "user" ? (
                 <p className="inline-block text-sm">{t.text}</p>
               ) : t.status === "error" ? (
-                <p className="text-sm text-red-600">{t.text}</p>
+                <p className="text-sm text-destructive">{t.text}</p>
               ) : (
-                <div className="space-y-2 text-sm text-zinc-600 dark:text-zinc-400 [&_a]:underline [&_code]:rounded [&_code]:bg-black/5 [&_code]:px-1 [&_ol]:list-decimal [&_ol]:pl-5 [&_pre]:overflow-x-auto [&_ul]:list-disc [&_ul]:pl-5">
+                <div className="space-y-2 text-sm text-muted-foreground [&_a]:underline [&_code]:rounded [&_code]:bg-accent [&_code]:px-1 [&_ol]:list-decimal [&_ol]:pl-5 [&_pre]:overflow-x-auto [&_ul]:list-disc [&_ul]:pl-5">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>{t.text}</ReactMarkdown>
                   {t.status === "streaming" && t.text === "" && (
                     <span className="inline-flex items-center gap-1 align-middle">
@@ -179,7 +179,7 @@ export function FloatingChatbot() {
         </div>
         <form className="flex gap-2 p-4" onSubmit={handleSubmit}>
           <input
-            className="flex-1 rounded-md border border-black/10 px-2 py-1 text-sm dark:border-white/10"
+            className="flex-1 rounded-md border border-border px-2 py-1 text-sm dark:border-border"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={`Ask about ${pathname.includes("/courses/") ? "this course" : "your progress"}…`}

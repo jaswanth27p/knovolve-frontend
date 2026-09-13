@@ -84,13 +84,13 @@ export default function CourseExtendPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col space-y-6 px-6 py-10">
-      <Link href={`/courses/${params.slug}`} className="flex w-fit items-center gap-1 text-sm text-zinc-600 hover:underline dark:text-zinc-400">
+      <Link href={`/courses/${params.slug}`} className="flex w-fit items-center gap-1 text-sm text-muted-foreground hover:underline dark:text-muted-foreground">
         <ArrowLeft className="size-4" /> Back to course
       </Link>
 
       <div className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight">Extend this course</h1>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="text-sm text-muted-foreground">
           Ask for chapters covering concepts this course doesn&apos;t teach. They&apos;re added under &quot;Additional Chapters&quot;.
         </p>
       </div>
@@ -101,24 +101,24 @@ export default function CourseExtendPage() {
           onChange={(e) => setMessage(e.target.value)}
           placeholder="e.g. add a chapter on TCP three-way handshake and another on DNS resolution"
           rows={4}
-          className="flex min-h-[80px] w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-800 dark:bg-zinc-950 dark:ring-offset-zinc-950 dark:placeholder:text-zinc-400 dark:focus-visible:ring-zinc-300"
+          className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
         />
         <Button onClick={() => createMutation.mutate()} disabled={running || !message.trim()}>
           {createMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
           Generate chapters
         </Button>
         {conflict && (
-          <p className="text-sm text-red-600">An extension is already running for this course.</p>
+          <p className="text-sm text-destructive">An extension is already running for this course.</p>
         )}
         {createMutation.isError && !conflict && (
-          <p className="text-sm text-red-600">Failed to start generation.</p>
+          <p className="text-sm text-destructive">Failed to start generation.</p>
         )}
-        {jobsQuery.isError && <p className="text-sm text-red-600">Failed to load job status.</p>}
+        {jobsQuery.isError && <p className="text-sm text-destructive">Failed to load job status.</p>}
         {!activeJob && lastJob?.status === "failed" && (
-          <p className="text-sm text-red-600">{lastJob.error ?? "Extension failed."}</p>
+          <p className="text-sm text-destructive">{lastJob.error ?? "Extension failed."}</p>
         )}
         {!activeJob && lastJob?.status === "succeeded" && lastJob.added?.length === 0 && (
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-muted-foreground">
             No new chapters were needed — that topic looks like it&apos;s already covered in this course.
           </p>
         )}
@@ -127,7 +127,7 @@ export default function CourseExtendPage() {
       {jobs.length > 0 && (
         <div className="space-y-2">
           <h2 className="text-lg font-semibold">Extension requests</h2>
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-muted-foreground">
             {activeJob
               ? "Still running — you can leave this page. It keeps going and re-attaches when you return."
               : "Your recent requests for this course."}
@@ -136,11 +136,11 @@ export default function CourseExtendPage() {
             {jobs.map((j, i) => (
               <div
                 key={j.job_id ?? i}
-                className="flex items-start justify-between gap-3 rounded-md border border-black/10 p-3 dark:border-white/10"
+                className="flex items-start justify-between gap-3 rounded-md border border-border p-3 dark:border-border"
               >
                 <div className="min-w-0">
                   <p className="truncate text-sm">{j.request ?? "Extension request"}</p>
-                  <p className="text-xs text-zinc-500">
+                  <p className="text-xs text-muted-foreground">
                     {j.created_at ? new Date(j.created_at).toLocaleString() : ""}
                     {j.status === "succeeded" && j.added
                       ? ` · ${j.added.length} chapter${j.added.length === 1 ? "" : "s"} added`
@@ -151,7 +151,7 @@ export default function CourseExtendPage() {
                 <span
                   className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-xs ${
                     EXTENSION_STATUS_CLASS[j.status] ??
-                    "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+                    "bg-muted text-foreground"
                   }`}
                 >
                   {(j.status === "pending" || j.status === "running") && (
@@ -167,19 +167,19 @@ export default function CourseExtendPage() {
 
       <div className="space-y-2">
         <h2 className="text-lg font-semibold">Your added chapters</h2>
-        {!chaptersQuery.data?.length && <p className="text-sm text-zinc-500">No chapters added yet.</p>}
+        {!chaptersQuery.data?.length && <p className="text-sm text-muted-foreground">No chapters added yet.</p>}
         {chaptersQuery.data?.map((c) => (
-          <div key={c.id} className="flex items-center justify-between rounded-md border border-black/10 p-3 dark:border-white/10">
+          <div key={c.id} className="flex items-center justify-between rounded-md border border-border p-3 dark:border-border">
             <div>
               <p className="text-sm font-medium">{c.title}</p>
-              <p className="text-xs text-zinc-500">{c.objective}</p>
+              <p className="text-xs text-muted-foreground">{c.objective}</p>
             </div>
             <div className="flex items-center gap-3">
-              <Link href={`/courses/${params.slug}/chapters/${c.id}`} className="text-sm text-zinc-600 hover:underline dark:text-zinc-400">
+              <Link href={`/courses/${params.slug}/chapters/${c.id}`} className="text-sm text-muted-foreground hover:underline dark:text-muted-foreground">
                 Open
               </Link>
               <button onClick={() => setDeleteTarget(c)} aria-label="Delete chapter" title="Delete chapter">
-                <Trash2 className="size-4 text-zinc-400 hover:text-red-600" />
+                <Trash2 className="size-4 text-muted-foreground hover:text-destructive" />
               </button>
             </div>
           </div>

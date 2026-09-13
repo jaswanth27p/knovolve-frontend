@@ -49,17 +49,17 @@ export default function LoginPage() {
     <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center space-y-6 px-6">
       <div className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight">Log in</h1>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="text-sm text-muted-foreground">
           Continue to your courses.
         </p>
       </div>
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
         <Input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
-        {error && <p className="text-red-600 text-sm">{error}</p>}
+        {error && <p className="text-sm text-destructive">{error}</p>}
         <Button type="submit" className="w-full">Log in</Button>
       </form>
-      <p className="text-center text-sm text-zinc-600 dark:text-zinc-400">
+      <p className="text-center text-sm text-muted-foreground">
         New to Knovolve?{" "}
         <Link href="/register" className="font-medium text-foreground underline-offset-4 hover:underline">
           Create an account

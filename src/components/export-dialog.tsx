@@ -130,8 +130,8 @@ export function ExportDialog({ slug }: { slug: string }) {
               onClick={() => setSelected(option.kind)}
               className={`rounded-md border p-3 text-left transition ${
                 selected === option.kind
-                  ? "border-zinc-900 dark:border-zinc-100"
-                  : "border-black/10 dark:border-white/10"
+                  ? "border-brand bg-brand/5"
+                  : "border-border"
               }`}
               aria-pressed={selected === option.kind}
             >
@@ -160,10 +160,10 @@ export function ExportDialog({ slug }: { slug: string }) {
           }}
         />
         {job && (
-          <div className="rounded-md border border-black/10 p-3 text-sm dark:border-white/10">
+          <div className="rounded-md border border-border p-3 text-sm dark:border-border">
             <p className="font-medium">{optionLabel(job.kind)}: {job.status}</p>
             {job.status === "failed" && (
-              <p className="mt-1 text-red-600">{job.error ?? "PDF export failed. Please try again."}</p>
+              <p className="mt-1 text-destructive">{job.error ?? "PDF export failed. Please try again."}</p>
             )}
             {job.status === "succeeded" && (
               <Button className="mt-2" disabled={downloading} onClick={downloadActiveJob}>

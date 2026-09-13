@@ -97,7 +97,7 @@ export function AssignmentRunner({ slug, assignmentId, cacheKey, fetchAssignment
         : status === 404
           ? "This assignment isn't ready yet. It will appear once the content finishes generating."
           : "Failed to load assignment.";
-    return <p className="text-red-600">{message}</p>;
+    return <p className="text-destructive">{message}</p>;
   }
   if (data?.status === "generating") return (
     <div className="space-y-4">
@@ -107,13 +107,13 @@ export function AssignmentRunner({ slug, assignmentId, cacheKey, fetchAssignment
       </p>
     </div>
   );
-  if (data?.status === "failed") return <p className="text-red-600">Assignment generation failed: {data.error}</p>;
+  if (data?.status === "failed") return <p className="text-destructive">Assignment generation failed: {data.error}</p>;
   if (!data?.questions || realAssignmentId === null) return null;
   // Wait for the attempt history before deciding which view to show —
   // otherwise a learner with a prior attempt would briefly flash the blank
   // question form before it flips to their latest result.
   if (attemptsQuery.isLoading) return <AssignmentSkeleton />;
-  if (attemptsQuery.isError) return <p className="text-red-600">Failed to load your attempt history.</p>;
+  if (attemptsQuery.isError) return <p className="text-destructive">Failed to load your attempt history.</p>;
 
   const attempts = attemptsQuery.data ?? [];
   const latest = attempts[0];
@@ -136,8 +136,8 @@ export function AssignmentRunner({ slug, assignmentId, cacheKey, fetchAssignment
           )}
         </div>
         {attempts.length > 1 && (
-          <div className="space-y-2 border-t border-black/10 pt-4 dark:border-white/10">
-            <h3 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">Past attempts</h3>
+          <div className="space-y-2 border-t border-border pt-4 dark:border-border">
+            <h3 className="text-sm font-medium text-muted-foreground">Past attempts</h3>
             <div className="space-y-1.5">
               {attempts.map((a, i) => (
                 <button
@@ -145,13 +145,13 @@ export function AssignmentRunner({ slug, assignmentId, cacheKey, fetchAssignment
                   type="button"
                   onClick={() => setSelectedAttemptId(a.id)}
                   className={
-                    "flex w-full items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-zinc-100 dark:hover:bg-zinc-900"
-                    + (a.id === selected.id ? " bg-zinc-100 dark:bg-zinc-900" : "")
+                    "flex w-full items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted dark:hover:bg-muted"
+                    + (a.id === selected.id ? " bg-muted" : "")
                   }
                 >
                   <span>
                     Attempt {attempts.length - i}
-                    {a.id === latest.id && <span className="text-zinc-500"> (latest)</span>}
+                    {a.id === latest.id && <span className="text-muted-foreground"> (latest)</span>}
                   </span>
                   <span className="flex items-center gap-2">
                     {a.status === "graded" && (
@@ -175,7 +175,7 @@ export function AssignmentRunner({ slug, assignmentId, cacheKey, fetchAssignment
   return (
     <div className="space-y-4">
       {latest && retaking && (
-        <button type="button" onClick={() => setRetaking(false)} className="text-sm text-zinc-600 underline dark:text-zinc-400">
+        <button type="button" onClick={() => setRetaking(false)} className="text-sm text-muted-foreground underline dark:text-muted-foreground">
           ← Back to latest result
         </button>
       )}
@@ -207,7 +207,7 @@ export function AssignmentRunner({ slug, assignmentId, cacheKey, fetchAssignment
             ))}
             {q.type === "free_text" && (
               <textarea
-                className="w-full rounded-md border border-black/10 p-2 text-sm dark:border-white/10"
+                className="w-full rounded-md border border-border p-2 text-sm dark:border-border"
                 value={answers[q.id] ?? ""}
                 onChange={(e) => setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))}
               />
@@ -218,7 +218,7 @@ export function AssignmentRunner({ slug, assignmentId, cacheKey, fetchAssignment
       <Button disabled={!allAnswered || submit.isPending} onClick={() => submit.mutate()}>
         {submit.isPending ? "Submitting…" : "Submit"}
       </Button>
-      {submit.isError && <p className="text-red-600">Failed to submit. Please try again.</p>}
+      {submit.isError && <p className="text-destructive">Failed to submit. Please try again.</p>}
     </div>
   );
 }

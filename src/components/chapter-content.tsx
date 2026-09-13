@@ -113,12 +113,12 @@ export function ChapterContent({ slug, chapterId, version }: ChapterContentProps
   const hrefForVersion = (v: number) => (latest !== null && v === latest ? basePath : versionHref(v));
   const nav =
     versions.length > 1 && current !== null && latest !== null ? (
-      <div className="flex items-center gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
         {current > 1 ? (
           <Link
             href={hrefForVersion(current - 1)}
             aria-label="Previous version"
-            className="rounded-md p-1 hover:bg-zinc-100 dark:hover:bg-zinc-900"
+            className="rounded-md p-1 hover:bg-muted dark:hover:bg-muted"
           >
             <ChevronLeft className="size-4" />
           </Link>
@@ -135,7 +135,7 @@ export function ChapterContent({ slug, chapterId, version }: ChapterContentProps
           <Link
             href={hrefForVersion(current + 1)}
             aria-label="Next version"
-            className="rounded-md p-1 hover:bg-zinc-100 dark:hover:bg-zinc-900"
+            className="rounded-md p-1 hover:bg-muted dark:hover:bg-muted"
           >
             <ChevronRight className="size-4" />
           </Link>
@@ -283,7 +283,7 @@ export function ChapterContent({ slug, chapterId, version }: ChapterContentProps
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col space-y-8 px-6 py-10 pb-20">
       <Link
         href={ownerModule ? `/courses/${slug}/modules/${ownerModule.id}` : `/courses/${slug}`}
-        className="flex w-fit items-center gap-1 text-sm text-zinc-600 hover:underline dark:text-zinc-400"
+        className="flex w-fit items-center gap-1 text-sm text-muted-foreground hover:underline dark:text-muted-foreground"
       >
         <ArrowLeft className="size-4" />
         {ownerModule ? "Back to module" : "Back to course"}
@@ -293,9 +293,9 @@ export function ChapterContent({ slug, chapterId, version }: ChapterContentProps
       {viewingPast ? (
         <>
           {pastVersion.isLoading && <ChapterContentSkeleton />}
-          {pastVersion.isError && <p className="text-red-600">Failed to load this version.</p>}
+          {pastVersion.isError && <p className="text-destructive">Failed to load this version.</p>}
           {pastVersion.data?.status === "failed" && (
-            <p className="text-red-600">Generation failed: {pastVersion.data.error}</p>
+            <p className="text-destructive">Generation failed: {pastVersion.data.error}</p>
           )}
           {pastVersion.data?.status === "generating" && (
             <div className="space-y-4">
@@ -316,7 +316,7 @@ export function ChapterContent({ slug, chapterId, version }: ChapterContentProps
         </>
       ) : (
         <>
-          {error && <p className="text-red-600">{error}</p>}
+          {error && <p className="text-destructive">{error}</p>}
           <SectionsView sections={ordered} />
           {ordered.length === 0 && !error && remediating && (
             <div className="space-y-4">

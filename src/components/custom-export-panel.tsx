@@ -98,7 +98,7 @@ export function CustomExportPanel({
   }
 
   return (
-    <div className="space-y-3 border-t border-black/10 pt-3 dark:border-white/10">
+    <div className="space-y-3 border-t border-border pt-3 dark:border-border">
       <h3 className="flex items-center gap-2 text-sm font-medium">
         <Sparkles className="size-4" />
         Custom request
@@ -107,19 +107,19 @@ export function CustomExportPanel({
         Examples: “Interview questions with answers,” “A short summary,” or “A revision cheat sheet.”
         The assistant may ask how long it should be or how many items you want.
       </p>
-      <div className="max-h-64 space-y-2 overflow-y-auto rounded-md border border-black/10 p-3 dark:border-white/10">
+      <div className="max-h-64 space-y-2 overflow-y-auto rounded-md border border-border p-3 dark:border-border">
         {turns.length === 0 && (
           <p className="text-sm text-muted-foreground">Describe the PDF you want.</p>
         )}
         {turns.map((turn, index) => (
-          <p key={index} className={`text-sm ${turn.role === "user" ? "text-right" : "text-zinc-600 dark:text-zinc-400"}`}>
+          <p key={index} className={`text-sm ${turn.role === "user" ? "text-right" : "text-muted-foreground"}`}>
             {turn.content || (sending && index === turns.length - 1 ? "Thinking…" : "")}
           </p>
         ))}
       </div>
       <form className="flex gap-2" onSubmit={send}>
         <input
-          className="flex-1 rounded-md border border-black/10 px-2 py-1 text-sm dark:border-white/10"
+          className="flex-1 rounded-md border border-border px-2 py-1 text-sm dark:border-border"
           value={input}
           onChange={(event) => setInput(event.target.value)}
           placeholder="Prepare interview questions for this topic…"
@@ -130,12 +130,12 @@ export function CustomExportPanel({
         </Button>
       </form>
       {plan && draft && (
-        <div className="space-y-2 rounded-md border border-black/10 p-3 dark:border-white/10">
+        <div className="space-y-2 rounded-md border border-border p-3 dark:border-border">
           <p className="text-sm font-medium">Review the finalized request</p>
           <label className="block text-xs text-muted-foreground">
             Title
             <input
-              className="mt-1 w-full rounded-md border border-black/10 px-2 py-1 text-sm text-foreground dark:border-white/10"
+              className="mt-1 w-full rounded-md border border-border px-2 py-1 text-sm text-foreground dark:border-border"
               value={draft.title}
               onChange={(event) => updateDraft({ title: event.target.value })}
             />
@@ -144,7 +144,7 @@ export function CustomExportPanel({
             <label className="block text-xs text-muted-foreground">
               Format
               <select
-                className="mt-1 w-full rounded-md border border-black/10 px-2 py-1 text-sm text-foreground dark:border-white/10"
+                className="mt-1 w-full rounded-md border border-border px-2 py-1 text-sm text-foreground dark:border-border"
                 value={draft.output_kind}
                 onChange={(event) => updateDraft({ output_kind: event.target.value as ClarifyPlan["output_kind"] })}
               >
@@ -156,7 +156,7 @@ export function CustomExportPanel({
             <label className="block text-xs text-muted-foreground">
               Length
               <select
-                className="mt-1 w-full rounded-md border border-black/10 px-2 py-1 text-sm text-foreground dark:border-white/10"
+                className="mt-1 w-full rounded-md border border-border px-2 py-1 text-sm text-foreground dark:border-border"
                 value={draft.length}
                 onChange={(event) => updateDraft({ length: event.target.value as ClarifyPlan["length"] })}
               >
@@ -171,7 +171,7 @@ export function CustomExportPanel({
             <input
               type="number"
               min={1}
-              className="mt-1 w-full rounded-md border border-black/10 px-2 py-1 text-sm text-foreground dark:border-white/10"
+              className="mt-1 w-full rounded-md border border-border px-2 py-1 text-sm text-foreground dark:border-border"
               value={draft.item_count ?? ""}
               onChange={(event) =>
                 updateDraft({ item_count: event.target.value === "" ? null : Number(event.target.value) })
@@ -181,7 +181,7 @@ export function CustomExportPanel({
           <label className="block text-xs text-muted-foreground">
             Notes
             <textarea
-              className="mt-1 w-full rounded-md border border-black/10 px-2 py-1 text-sm text-foreground dark:border-white/10"
+              className="mt-1 w-full rounded-md border border-border px-2 py-1 text-sm text-foreground dark:border-border"
               value={draft.notes ?? ""}
               onChange={(event) => updateDraft({ notes: event.target.value || null })}
             />

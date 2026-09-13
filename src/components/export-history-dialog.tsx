@@ -92,7 +92,7 @@ export function ExportHistoryDialog({ slug }: { slug: string }) {
           <DialogDescription>Only PDFs you requested for this course are listed here.</DialogDescription>
         </DialogHeader>
         {jobsQuery.isLoading && <p className="text-sm text-muted-foreground">Loading your exports…</p>}
-        {jobsQuery.isError && <p className="text-sm text-red-600">Failed to load exports.</p>}
+        {jobsQuery.isError && <p className="text-sm text-destructive">Failed to load exports.</p>}
         {!jobsQuery.isLoading && jobs.length === 0 && (
           <p className="text-sm text-muted-foreground">No exports yet. Use Export to create your first PDF.</p>
         )}
@@ -100,7 +100,7 @@ export function ExportHistoryDialog({ slug }: { slug: string }) {
           {jobs.map((job) => (
             <div
               key={job.id}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-black/10 p-3 dark:border-white/10"
+              className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border p-3 dark:border-border"
             >
               <div>
                 <p className="text-sm font-medium">{jobLabel(job)}</p>
@@ -109,7 +109,7 @@ export function ExportHistoryDialog({ slug }: { slug: string }) {
                   {job.result_size ? ` · ${Math.round(job.result_size / 1024)} KB` : ""}
                 </p>
                 {job.status === "failed" && (
-                  <p className="mt-1 text-xs text-red-600">{job.error ?? "PDF export failed. Please try again."}</p>
+                  <p className="mt-1 text-xs text-destructive">{job.error ?? "PDF export failed. Please try again."}</p>
                 )}
               </div>
               <div className="flex items-center gap-2">

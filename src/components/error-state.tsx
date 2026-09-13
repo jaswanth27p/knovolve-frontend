@@ -16,10 +16,10 @@ export function ErrorState({ error, reset, title = "Something went wrong" }: Err
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center gap-4 px-6 py-20 text-center">
-      <AlertTriangle className="size-8 text-red-600" />
+      <AlertTriangle className="size-8 text-destructive" />
       <div className="space-y-1">
         <h2 className="text-lg font-semibold">{title}</h2>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="text-sm text-muted-foreground">
           Please try again, or head back if the problem persists.
         </p>
       </div>
