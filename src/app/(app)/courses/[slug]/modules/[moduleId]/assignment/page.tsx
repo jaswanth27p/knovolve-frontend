@@ -31,9 +31,6 @@ export default function ModuleAssignmentPage() {
         slug={params.slug}
         assignmentId={moduleId}
         fetchAssignment={() => api.getModuleAssignment(params.slug, moduleId)}
-        resultsHref={(assignmentId, attemptId) =>
-          `/courses/${params.slug}/modules/${moduleId}/assignment/results/${assignmentId}/${attemptId}`
-        }
       />
     </div>
   );

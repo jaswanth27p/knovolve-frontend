@@ -1,7 +1,5 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -10,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AttemptResults } from "@/components/attempt-results";
 import { AssignmentSkeleton } from "@/components/skeletons";
-import { api, AssignmentStatus, SubmitAnswer } from "@/lib/api";
+import { api, AssignmentStatus, parseExportApiError, SubmitAnswer } from "@/lib/api";
 import { notifyCourseStatusChanged } from "@/lib/export-status";
 
 // Question/option text is plain markdown source (bold, code, lists, etc.)
@@ -34,17 +32,20 @@ interface AssignmentRunnerProps {
   // `assignmentId` (the prior single-cache-entry-per-id behavior).
   cacheKey?: string | number | null;
   fetchAssignment: () => Promise<AssignmentStatus>;
-  resultsHref: (assignmentId: number, attemptId: number) => string;
 }
 
-export function AssignmentRunner({ slug, assignmentId, cacheKey, fetchAssignment, resultsHref }: AssignmentRunnerProps) {
-  const router = useRouter();
+export function AssignmentRunner({ slug, assignmentId, cacheKey, fetchAssignment }: AssignmentRunnerProps) {
   const queryClient = useQueryClient();
   const [answers, setAnswers] = useState<Record<number, string>>({});
   // Flipping to the question form to try again is a purely local, temporary
   // view state — never persisted. Closing and reopening this page always
-  // lands back on the latest result, per design.
+  // lands back on the latest result.
   const [retaking, setRetaking] = useState(false);
+  // Which past attempt's results to show inline; null = the latest attempt.
+  // Attempt history never gets its own route — it's local view state scoped
+  // to this assignment (which is itself scoped to one chapter version), so
+  // attempts for different versions can never bleed into one another.
+  const [selectedAttemptId, setSelectedAttemptId] = useState<number | null>(null);
 
   const assignmentQuery = useQuery({
     queryKey: ["assignment", slug, cacheKey ?? assignmentId],
@@ -71,12 +72,7 @@ export function AssignmentRunner({ slug, assignmentId, cacheKey, fetchAssignment
     mutationFn: async () => {
       // The assignment's own id (not the `assignmentId` prop, which is only
       // the chapter/module id used for the React Query cache key) is what
-      // submitAttempt needs — getChapterAssignment's URL is keyed by
-      // chapterId, not Assignment.id, so the real id has to come from the
-      // fetch response itself. It's also what the results page URL needs
-      // (module assignment ids are genuinely different from moduleId), so
-      // carry it alongside the submit result rather than re-deriving it
-      // later from a possibly-stale closure over assignmentQuery.data.
+      // submitAttempt needs.
       if (!data?.questions || data.id === null) throw new Error("assignment not ready");
       const payload: SubmitAnswer[] = data.questions.map((q) => ({
         question_id: q.id, answer: answers[q.id] ?? "",
@@ -87,12 +83,22 @@ export function AssignmentRunner({ slug, assignmentId, cacheKey, fetchAssignment
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["attempts", slug, result.assignmentId] });
       setRetaking(false);
-      router.push(resultsHref(result.assignmentId, result.attempt_id));
+      setSelectedAttemptId(result.attempt_id);
+      setAnswers({});
     },
   });
 
   if (assignmentQuery.isLoading) return <AssignmentSkeleton />;
-  if (assignmentQuery.isError) return <p className="text-red-600">Failed to load assignment.</p>;
+  if (assignmentQuery.isError) {
+    const { status } = parseExportApiError(assignmentQuery.error);
+    const message =
+      status === 409
+        ? "This assignment isn't ready yet — every chapter in the module must finish generating first."
+        : status === 404
+          ? "This assignment isn't ready yet. It will appear once the content finishes generating."
+          : "Failed to load assignment.";
+    return <p className="text-red-600">{message}</p>;
+  }
   if (data?.status === "generating") return (
     <div className="space-y-4">
       <AssignmentSkeleton />
@@ -111,23 +117,37 @@ export function AssignmentRunner({ slug, assignmentId, cacheKey, fetchAssignment
 
   const attempts = attemptsQuery.data ?? [];
   const latest = attempts[0];
+  const selected = selectedAttemptId != null
+    ? attempts.find((a) => a.id === selectedAttemptId) ?? latest
+    : latest;
 
-  if (latest && !retaking) {
+  if (latest && !retaking && selected) {
     return (
       <div className="space-y-6">
-        <AttemptResults slug={slug} assignmentId={realAssignmentId} attemptId={latest.id} />
-        <Button variant="outline" onClick={() => { setAnswers({}); setRetaking(true); }}>
-          Retake this assignment
-        </Button>
+        <AttemptResults slug={slug} assignmentId={realAssignmentId} attemptId={selected.id} />
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" onClick={() => { setAnswers({}); setRetaking(true); }}>
+            Retake this assignment
+          </Button>
+          {selected.id !== latest.id && (
+            <Button variant="ghost" onClick={() => setSelectedAttemptId(null)}>
+              Back to latest result
+            </Button>
+          )}
+        </div>
         {attempts.length > 1 && (
           <div className="space-y-2 border-t border-black/10 pt-4 dark:border-white/10">
             <h3 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">Past attempts</h3>
             <div className="space-y-1.5">
               {attempts.map((a, i) => (
-                <Link
+                <button
                   key={a.id}
-                  href={resultsHref(realAssignmentId, a.id)}
-                  className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                  type="button"
+                  onClick={() => setSelectedAttemptId(a.id)}
+                  className={
+                    "flex w-full items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-zinc-100 dark:hover:bg-zinc-900"
+                    + (a.id === selected.id ? " bg-zinc-100 dark:bg-zinc-900" : "")
+                  }
                 >
                   <span>
                     Attempt {attempts.length - i}
@@ -141,7 +161,7 @@ export function AssignmentRunner({ slug, assignmentId, cacheKey, fetchAssignment
                     )}
                     {a.status !== "graded" && <Badge variant="outline">{a.status}</Badge>}
                   </span>
-                </Link>
+                </button>
               ))}
             </div>
           </div>
