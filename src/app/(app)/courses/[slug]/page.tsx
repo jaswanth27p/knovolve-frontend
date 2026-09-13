@@ -17,11 +17,10 @@ export default function CourseDetailPage() {
     queryKey: ["course", params.slug],
     queryFn: () => api.getCourse(params.slug),
   });
-  // /me/courses is paginated now; this page only needs to know whether the
-  // single course being viewed is tracked, so request the max page size
-  // rather than adding a dedicated by-slug lookup endpoint.
-  const tracked = useQuery({ queryKey: ["my-courses", "detail-lookup"], queryFn: () => api.getMyCourses({ limit: 100 }) });
-  const trackedCourse = tracked.data?.items.find((c) => c.topic_slug === params.slug);
+  // Dedicated by-slug lookup: this page only needs to know whether the single
+  // course being viewed is tracked, not the learner's whole library.
+  const tracked = useQuery({ queryKey: ["my-course", params.slug], queryFn: () => api.getMyCourseBySlug(params.slug) });
+  const trackedCourse = tracked.data ?? undefined;
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col space-y-6 px-6 py-10">

@@ -482,6 +482,10 @@ export const api = {
     request<ActivityResponse>(`/me/activity?days=${days}`),
   getMyCourses: (params: MyCoursesParams = {}): Promise<Paginated<TrackedCourse>> =>
     request<Paginated<TrackedCourse>>(`/me/courses${toQueryString(params)}`),
+  // Single-course tracked lookup, so the course-detail page doesn't have to
+  // fetch and paginate the learner's whole library just to check one slug.
+  getMyCourseBySlug: (slug: string): Promise<TrackedCourse | null> =>
+    request<TrackedCourse | null>(`/me/courses/by-slug/${slug}`),
   getPublicCourses: (params: PublicCoursesParams = {}): Promise<Paginated<PublicCourse>> =>
     request<Paginated<PublicCourse>>(`/courses${toQueryString(params)}`),
   deleteMyCourse: (courseId: number): Promise<void> =>

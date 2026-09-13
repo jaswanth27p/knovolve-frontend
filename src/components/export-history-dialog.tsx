@@ -74,7 +74,7 @@ export function ExportHistoryDialog({ slug }: { slug: string }) {
   async function download(job: ExportJobStatus) {
     setDownloadingId(job.id);
     try {
-      api.downloadExport(slug, job.id);
+      await api.downloadExport(slug, job.id);
       toast.success("PDF downloaded.");
     } catch (error) {
       toast.error(parseExportApiError(error).message);

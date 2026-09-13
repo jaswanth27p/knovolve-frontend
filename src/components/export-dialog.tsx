@@ -102,7 +102,7 @@ export function ExportDialog({ slug }: { slug: string }) {
     if (!job || job.status !== "succeeded") return;
     setDownloading(true);
     try {
-      api.downloadExport(slug, job.id);
+      await api.downloadExport(slug, job.id);
       notifyCourseStatusChanged(queryClient, slug);
       toast.success("PDF downloaded.");
     } catch (error) {

@@ -82,8 +82,10 @@ export function ChapterContent({ slug, chapterId, version }: ChapterContentProps
     queryKey: ["chapter-versions", slug, chapterId],
     queryFn: () => api.getChapterVersions(slug, chapterId),
     // Poll while a V2+ remediation is being authored so the nav/latest state
-    // picks it up without a manual refresh.
-    refetchInterval: 5000,
+    // picks it up without a manual refresh — but only then, mirroring the
+    // past-version query below, so an idle chapter doesn't poll forever.
+    refetchInterval: (query) =>
+      query.state.data?.some((v) => v.status === "generating") ? 5000 : false,
   });
   const versions = versionsQuery.data ?? [];
   const latest = versions.length > 0 ? versions[versions.length - 1].version : null;
