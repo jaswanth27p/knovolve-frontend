@@ -35,7 +35,7 @@ export default function CourseDetailPage() {
             <GenerateCourseButton slug={data.topic_slug} />
           </div>
           {trackedCourse && (
-            <div className="flex items-center justify-between rounded-md border border-border p-4">
+            <div className="flex flex-col gap-3 rounded-md border border-border p-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm font-medium">
                   {trackedCourse.status === "completed" ? "Completed" : `In progress · ${Math.round(trackedCourse.progress * 100)}%`}
@@ -47,18 +47,18 @@ export default function CourseDetailPage() {
                   />
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 {data.modules[0]?.chapters[0] && (
                   <Link
                     href={`/courses/${data.topic_slug}/chapters/${data.modules[0].chapters[0].id}`}
-                    className="rounded-md bg-brand-gradient px-3 py-1.5 text-sm text-white shadow-brand"
+                    className="shrink-0 whitespace-nowrap rounded-md bg-brand-gradient px-3 py-1.5 text-sm text-white shadow-brand"
                   >
                     {trackedCourse.progress > 0 ? "Resume" : "Start"}
                   </Link>
                 )}
                 <Link
                   href={`/courses/${params.slug}/extend`}
-                  className="rounded-md border border-border px-3 py-1.5 text-sm hover:bg-accent"
+                  className="shrink-0 whitespace-nowrap rounded-md border border-border px-3 py-1.5 text-sm hover:bg-accent"
                 >
                   Extend course
                 </Link>

@@ -14,6 +14,12 @@ import {
 } from "@/lib/api";
 import { notifyCourseStatusChanged } from "@/lib/export-status";
 
+export function formatAssistantReply(reply: string, questions: string[]): string {
+  if (questions.length === 0) return reply;
+  const bulleted = questions.map((question) => `- ${question}`).join("\n");
+  return reply ? `${reply}\n${bulleted}` : bulleted;
+}
+
 export function buildCustomBrief(initialRequest: string, turns: ClarifyChatTurn[]): string {
   const lines = [`Initial request: ${initialRequest.trim()}`];
   for (const turn of turns) {
@@ -80,7 +86,8 @@ export function CustomExportPanel({
     if (!initialRequest) setInitialRequest(message);
     try {
       const response = await clarifyMutation.mutateAsync({ message, history: turns });
-      setTurns([...nextHistory, { role: "assistant", content: response.reply }]);
+      const content = formatAssistantReply(response.reply, response.questions);
+      setTurns([...nextHistory, { role: "assistant", content }]);
       if (response.type === "plan" && response.plan) {
         setPlan(response.plan);
         setDraft(response.plan);
@@ -112,7 +119,10 @@ export function CustomExportPanel({
           <p className="text-sm text-muted-foreground">Describe the PDF you want.</p>
         )}
         {turns.map((turn, index) => (
-          <p key={index} className={`text-sm ${turn.role === "user" ? "text-right" : "text-muted-foreground"}`}>
+          <p
+            key={index}
+            className={`text-sm whitespace-pre-line ${turn.role === "user" ? "text-right" : "text-muted-foreground"}`}
+          >
             {turn.content || (sending && index === turns.length - 1 ? "Thinking…" : "")}
           </p>
         ))}

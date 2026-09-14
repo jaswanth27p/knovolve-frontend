@@ -23,19 +23,29 @@ function stripLeadingDuplicateHeading(markdown: string, heading: string): string
   return markdown.slice(match[0].length);
 }
 
+// react-markdown output has no intrinsic width constraint: a long unbroken
+// token (URL, identifier) or a wide `pre`/`table` can force this box wider
+// than the viewport on mobile, pushing the whole page into horizontal
+// scroll. `break-words` wraps ordinary text/inline-code, while `pre`/`table`
+// (which don't wrap well) get their own horizontal scroller instead.
+const MARKDOWN_CLASSES =
+  "min-w-0 break-words [&_pre]:max-w-full [&_pre]:overflow-x-auto [&_table]:block [&_table]:max-w-full [&_table]:overflow-x-auto";
+
 function SectionsView({ sections }: { sections: (ChapterContentSectionEvent | ChapterVersionSection)[] }) {
   return (
     <>
       {sections.map((section) => (
-        <section key={section.order} className="space-y-3">
+        <section key={section.order} className="min-w-0 space-y-3">
           <h2 className="text-xl font-semibold">{section.heading}</h2>
-          <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
-            {stripLeadingDuplicateHeading(section.body_markdown, section.heading)}
-          </ReactMarkdown>
+          <div className={MARKDOWN_CLASSES}>
+            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
+              {stripLeadingDuplicateHeading(section.body_markdown, section.heading)}
+            </ReactMarkdown>
+          </div>
           {section.examples.map((ex, i) => (
-            <div key={i} className="border-l-2 pl-3 space-y-1">
+            <div key={i} className="min-w-0 border-l-2 pl-3 space-y-1">
               <p className="font-medium">{ex.prompt}</p>
-              <div className="text-sm text-muted-foreground">
+              <div className={`text-sm text-muted-foreground ${MARKDOWN_CLASSES}`}>
                 <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
                   {ex.walkthrough}
                 </ReactMarkdown>
@@ -282,7 +292,7 @@ export function ChapterContent({ slug, chapterId, version }: ChapterContentProps
   const assignmentHref = viewingPast ? `${versionHref(version as number)}/assignment` : `${basePath}/assignment`;
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col space-y-8 px-6 py-10 pb-20">
+    <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-1 flex-col space-y-8 px-6 py-10 pb-20">
       <Link
         href={ownerModule ? `/courses/${slug}/modules/${ownerModule.id}` : `/courses/${slug}`}
         className="flex w-fit items-center gap-1 text-sm text-muted-foreground hover:underline dark:text-muted-foreground"

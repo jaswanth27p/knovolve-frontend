@@ -10,7 +10,7 @@ import {
   Sheet, SheetContent, SheetTitle, SheetTrigger,
 } from "@/components/ui/sheet";
 import { api } from "@/lib/api";
-import { clearAuthTracking } from "@/lib/tracked-job";
+import { clearAuthTracking, currentAccount } from "@/lib/tracked-job";
 import { LogOut, Menu, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +30,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   }, [router]);
 
   if (!mounted) return null;
+
+  const email = currentAccount();
 
   async function handleLogout() {
     await api.logout();
@@ -77,11 +79,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <SidebarNav collapsed={collapsed} />
         </div>
         <div className="mt-auto shrink-0 border-t border-border p-3">
+          {!collapsed && email && (
+            <p className="mb-2 truncate px-2 text-center text-xs text-muted-foreground" title={email}>
+              {email}
+            </p>
+          )}
           <Button
             variant="ghost"
             onClick={handleLogout}
             className={cn("w-full gap-2.5", collapsed && "justify-center px-0")}
-            title={collapsed ? "Log out" : undefined}
+            title={collapsed ? email ?? "Log out" : undefined}
           >
             <LogOut className="size-4 shrink-0" />
             {!collapsed && <span>Log out</span>}
@@ -106,6 +113,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </div>
                 <SidebarNav onNavigate={() => setSheetOpen(false)} />
                 <div className="mt-auto pt-4">
+                  {email && (
+                    <p className="mb-2 truncate px-2 text-center text-xs text-muted-foreground" title={email}>
+                      {email}
+                    </p>
+                  )}
                   <Button variant="ghost" onClick={() => { setSheetOpen(false); handleLogout(); }}>
                     <LogOut /> Log out
                   </Button>

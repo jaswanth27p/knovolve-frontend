@@ -7,7 +7,23 @@ vi.mock("@tanstack/react-query", () => ({ useMutation: vi.fn(), useQueryClient: 
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock("lucide-react", () => ({ Loader2: () => null, Send: () => null, Sparkles: () => null }));
 
-import { buildCustomBrief } from "./custom-export-panel";
+import { buildCustomBrief, formatAssistantReply } from "./custom-export-panel";
+
+describe("formatAssistantReply", () => {
+  it("appends questions as a bulleted list under the reply", () => {
+    expect(formatAssistantReply("I need a couple details.", ["How long should it be?", "How many questions?"])).toBe(
+      "I need a couple details.\n- How long should it be?\n- How many questions?"
+    );
+  });
+
+  it("returns the reply unchanged when there are no questions", () => {
+    expect(formatAssistantReply("Sounds good, here is the plan.", [])).toBe("Sounds good, here is the plan.");
+  });
+
+  it("falls back to the bulleted questions when reply is empty", () => {
+    expect(formatAssistantReply("", ["How long should it be?"])).toBe("- How long should it be?");
+  });
+});
 
 describe("buildCustomBrief", () => {
   it("preserves the initial request and substantive turns", () => {
