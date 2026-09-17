@@ -1,10 +1,9 @@
 "use client";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/empty-state";
+import { CourseCard } from "@/components/course-card";
 import { DashboardSkeleton, CourseListSkeleton } from "@/components/skeletons";
 import { ActivitySection } from "@/components/activity-section";
 import { BookOpen, Layers, CircleCheck, Flame } from "lucide-react";
@@ -82,38 +81,20 @@ export default function DashboardPage() {
             )}
             <div className="space-y-2">
               {courses.map((c) => (
-                <Link key={c.id} href={`/courses/${c.topic_slug}`}>
-                  <Card className="spotlight-border transition-colors hover:bg-card/80">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base">{c.topic_raw}</CardTitle>
-                      <CardDescription>
-                        {c.module_count} modules · {c.chapter_count} chapters
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Badge variant={c.status === "completed" ? "secondary" : "default"}>
-                          {c.status === "in_progress" ? "In progress" : c.status === "completed" ? "Completed" : c.status}
-                        </Badge>
-                        {c.content_ready && (
-                          <span className="text-xs text-muted-foreground">content ready</span>
-                        )}
-                      </div>
-                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                        <div
-                          className="h-full rounded-full bg-brand-gradient"
-                          style={{ width: `${Math.round(c.progress * 100)}%` }}
-                        />
-                      </div>
-                      {(c.weak_concept_count > 0 || c.strong_concept_count > 0) && (
-                        <div className="flex gap-2 text-xs text-muted-foreground">
-                          {c.strong_concept_count > 0 && <span>{c.strong_concept_count} strong</span>}
-                          {c.weak_concept_count > 0 && <span>{c.weak_concept_count} weak</span>}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </Link>
+                <CourseCard
+                  key={c.id}
+                  variant="mine"
+                  topicSlug={c.topic_slug}
+                  topicRaw={c.topic_raw}
+                  moduleCount={c.module_count}
+                  chapterCount={c.chapter_count}
+                  status={c.status}
+                  progress={c.progress}
+                  weakConceptCount={c.weak_concept_count}
+                  strongConceptCount={c.strong_concept_count}
+                  timestamp={c.last_opened_at}
+                  timestampVerb="Opened"
+                />
               ))}
             </div>
           </section>

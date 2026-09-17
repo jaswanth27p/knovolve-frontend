@@ -338,6 +338,13 @@ export interface AttemptSummary {
 
 export interface AttemptAnswerResult {
   question_id: number;
+  type: "mcq" | "true_false" | "free_text";
+  text: string;
+  options: string[] | null;
+  user_answer: string;
+  correct_answer: string;
+  explanation: string;
+  concept_tag: string;
   is_correct: boolean;
   feedback: string;
 }

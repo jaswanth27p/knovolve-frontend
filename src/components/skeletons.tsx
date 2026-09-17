@@ -38,19 +38,26 @@ export function DashboardSkeleton() {
   );
 }
 
-export function CourseListSkeleton({ count = 2 }: { count?: number }) {
+export function CourseCardSkeleton({ showProgress = false }: { showProgress?: boolean }) {
+  return (
+    <Card>
+      <CardContent className="flex items-start gap-3">
+        <Skeleton className="size-10 shrink-0 rounded-lg" />
+        <div className="min-w-0 flex-1 space-y-2">
+          <Skeleton className="h-5 w-48" />
+          <Skeleton className="h-4 w-40" />
+          {showProgress && <Skeleton className="h-1.5 w-full rounded-full" />}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export function CourseListSkeleton({ count = 2, showProgress = false }: { count?: number; showProgress?: boolean }) {
   return (
     <div className="space-y-2">
       {Array.from({ length: count }, (_, i) => (
-        <Card key={i}>
-          <CardHeader className="pb-2">
-            <Skeleton className="h-5 w-48" />
-            <Skeleton className="h-4 w-32" />
-          </CardHeader>
-          <CardContent>
-            <Skeleton className="h-5 w-20 rounded-full" />
-          </CardContent>
-        </Card>
+        <CourseCardSkeleton key={i} showProgress={showProgress} />
       ))}
     </div>
   );

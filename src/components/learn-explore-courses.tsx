@@ -2,9 +2,9 @@
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { Globe } from "lucide-react";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CourseCard } from "@/components/course-card";
 import { EmptyState } from "@/components/empty-state";
-import { Skeleton } from "@/components/ui/skeleton";
+import { CourseCardSkeleton } from "@/components/skeletons";
 import { api } from "@/lib/api";
 
 export function LearnExploreCourses() {
@@ -28,12 +28,7 @@ export function LearnExploreCourses() {
       {isLoading && (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {[0, 1, 2].map((i) => (
-            <Card key={i}>
-              <CardHeader className="pb-2">
-                <Skeleton className="h-5 w-40" />
-                <Skeleton className="h-4 w-24" />
-              </CardHeader>
-            </Card>
+            <CourseCardSkeleton key={i} />
           ))}
         </div>
       )}
@@ -52,19 +47,15 @@ export function LearnExploreCourses() {
       {courses.length > 0 && (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {courses.map((c) => (
-            <Card key={c.id} className="spotlight-border relative transition-colors hover:bg-card/80">
-              <Link
-                href={`/courses/${c.topic_slug}`}
-                className="absolute inset-0 z-10 rounded-xl"
-                aria-label={c.topic_raw}
-              />
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">{c.topic_raw}</CardTitle>
-                <CardDescription>
-                  {c.module_count} modules · {c.chapter_count} chapters
-                </CardDescription>
-              </CardHeader>
-            </Card>
+            <CourseCard
+              key={c.id}
+              topicSlug={c.topic_slug}
+              topicRaw={c.topic_raw}
+              moduleCount={c.module_count}
+              chapterCount={c.chapter_count}
+              timestamp={c.created_at}
+              timestampVerb="Added"
+            />
           ))}
         </div>
       )}

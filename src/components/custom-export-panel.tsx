@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, Send, MessageSquareText } from "lucide-react";
+import { Loader2, Send, MessageSquareText, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   api,
   parseExportApiError,
@@ -50,6 +51,24 @@ export function CustomExportPanel({
   const [plan, setPlan] = useState<ClarifyPlan | null>(null);
   const [draft, setDraft] = useState<ClarifyPlan | null>(null);
   const [sending, setSending] = useState(false);
+  // The finalized plan becomes the primary action once it arrives, so surface
+  // it the moment it renders instead of leaving the user to scroll for it.
+  const planRef = useRef<HTMLDivElement>(null);
+  const [highlightPlan, setHighlightPlan] = useState(false);
+  const highlightTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Called from the send handler (not an effect) right after a plan lands —
+  // scrolls the freshly rendered panel into view and pulses a brand ring.
+  function revealPlan() {
+    setHighlightPlan(true);
+    if (highlightTimer.current) clearTimeout(highlightTimer.current);
+    highlightTimer.current = setTimeout(() => setHighlightPlan(false), 2200);
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() =>
+        planRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" })
+      )
+    );
+  }
 
   const clarifyMutation = useMutation({
     mutationFn: ({ message, history }: { message: string; history: ClarifyChatTurn[] }) =>
@@ -94,6 +113,7 @@ export function CustomExportPanel({
       if (response.type === "plan" && response.plan) {
         setPlan(response.plan);
         setDraft(response.plan);
+        revealPlan();
       }
     } catch (error) {
       setTurns(nextHistory);
@@ -130,21 +150,18 @@ export function CustomExportPanel({
           </p>
         ))}
       </div>
-      <form className="flex gap-2" onSubmit={send}>
-        <input
-          className={`flex-1 ${fieldClassName}`}
-          value={input}
-          onChange={(event) => setInput(event.target.value)}
-          placeholder="Prepare interview questions for this topic…"
-        />
-        <Button type="submit" disabled={sending || !input.trim()}>
-          {sending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
-          Send
-        </Button>
-      </form>
       {plan && draft && (
-        <div className="space-y-2 rounded-lg bg-card p-3 ring-1 ring-foreground/10">
-          <p className="text-sm font-medium">Review the finalized request</p>
+        <div
+          ref={planRef}
+          className={`space-y-2 rounded-lg bg-card p-3 ring-1 transition-shadow ${
+            highlightPlan ? "ring-brand/50 shadow-brand" : "ring-foreground/10"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <Sparkles className="size-4 text-brand" strokeWidth={1.75} aria-hidden />
+            <p className="text-sm font-medium">Review the finalized request</p>
+            <Badge variant="secondary" className="ml-auto">Ready to generate</Badge>
+          </div>
           <label className="block text-xs text-muted-foreground">
             Title
             <input
@@ -205,6 +222,18 @@ export function CustomExportPanel({
           </Button>
         </div>
       )}
+      <form className="flex gap-2" onSubmit={send}>
+        <input
+          className={`flex-1 ${fieldClassName}`}
+          value={input}
+          onChange={(event) => setInput(event.target.value)}
+          placeholder={plan ? "Want to adjust it? Tell the assistant…" : "Prepare interview questions for this topic…"}
+        />
+        <Button type="submit" disabled={sending || !input.trim()}>
+          {sending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+          Send
+        </Button>
+      </form>
     </div>
   );
 }

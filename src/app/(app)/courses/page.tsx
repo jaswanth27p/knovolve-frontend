@@ -1,11 +1,8 @@
 "use client";
-import Link from "next/link";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/empty-state";
+import { CourseCard } from "@/components/course-card";
 import { CourseListSkeleton } from "@/components/skeletons";
 import { CourseFilterBar } from "@/components/course-filter-bar";
 import { Pagination } from "@/components/pagination";
@@ -113,38 +110,23 @@ export default function CoursesPage() {
   });
 
   function MyCard({ c }: { c: TrackedCourse }) {
-    const isPending = pendingIds.has(c.id);
-    const error = removeErrors[c.id];
     return (
-      <Card className="spotlight-border relative transition-colors hover:bg-card/80">
-        <Link
-          href={`/courses/${c.topic_slug}`}
-          className="absolute inset-0 z-10 rounded-xl"
-          aria-label={c.topic_raw}
-        />
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">{c.topic_raw}</CardTitle>
-          <CardDescription>
-            {c.module_count} modules · {c.chapter_count} chapters
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex items-center gap-2">
-          <Badge variant={c.status === "completed" ? "secondary" : "default"}>
-            {c.status === "in_progress" ? "In progress" : c.status === "completed" ? "Completed" : c.status}
-          </Badge>
-          {c.content_ready && <span className="text-xs text-muted-foreground">content ready</span>}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="relative z-20 ml-auto text-muted-foreground"
-            disabled={isPending}
-            onClick={() => remove.mutate(c.id)}
-          >
-            Remove
-          </Button>
-        </CardContent>
-        {error && <p className="relative z-20 px-6 pb-3 text-sm text-destructive">Failed to remove course: {error}</p>}
-      </Card>
+      <CourseCard
+        variant="mine"
+        topicSlug={c.topic_slug}
+        topicRaw={c.topic_raw}
+        moduleCount={c.module_count}
+        chapterCount={c.chapter_count}
+        status={c.status}
+        progress={c.progress}
+        weakConceptCount={c.weak_concept_count}
+        strongConceptCount={c.strong_concept_count}
+        timestamp={c.last_opened_at}
+        timestampVerb="Opened"
+        isRemoving={pendingIds.has(c.id)}
+        removeError={removeErrors[c.id]}
+        onRemove={() => remove.mutate(c.id)}
+      />
     );
   }
 
@@ -171,7 +153,7 @@ export default function CoursesPage() {
           statusFilter={myStatus}
           onStatusFilterChange={setMyStatus}
         />
-        {myCourses.isLoading && <CourseListSkeleton />}
+        {myCourses.isLoading && <CourseListSkeleton showProgress />}
         {myCourses.isError && <p className="text-destructive">Failed to load courses.</p>}
         {myCourses.data?.items.length === 0 && !myHasFilters && (
           <EmptyState
@@ -232,19 +214,15 @@ export default function CoursesPage() {
         )}
         <div className="space-y-2">
           {publicCourses.data?.items.map((c) => (
-            <Card key={c.id} className="spotlight-border relative transition-colors hover:bg-card/80">
-              <Link
-                href={`/courses/${c.topic_slug}`}
-                className="absolute inset-0 z-10 rounded-xl"
-                aria-label={c.topic_raw}
-              />
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">{c.topic_raw}</CardTitle>
-                <CardDescription>
-                  {c.module_count} modules · {c.chapter_count} chapters
-                </CardDescription>
-              </CardHeader>
-            </Card>
+            <CourseCard
+              key={c.id}
+              topicSlug={c.topic_slug}
+              topicRaw={c.topic_raw}
+              moduleCount={c.module_count}
+              chapterCount={c.chapter_count}
+              timestamp={c.created_at}
+              timestampVerb="Added"
+            />
           ))}
         </div>
         {publicCourses.data && (

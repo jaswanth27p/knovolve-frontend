@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@/components/ui/button", () => ({ Button: () => null }));
+vi.mock("@/components/ui/badge", () => ({ Badge: () => null }));
 vi.mock("@/lib/api", () => ({}));
 vi.mock("@/lib/export-status", () => ({ notifyCourseStatusChanged: vi.fn() }));
 vi.mock("@tanstack/react-query", () => ({ useMutation: vi.fn(), useQueryClient: vi.fn() }));

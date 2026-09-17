@@ -8,10 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LearnHero } from "@/components/learn-hero";
-import { JobBadge, LearnGenerationStatus } from "@/components/learn-generation-status";
+import { LearnGenerationsPanel } from "@/components/learn-generations-panel";
 import { LearnExploreCourses } from "@/components/learn-explore-courses";
 import { LearnHowItWorks } from "@/components/learn-how-it-works";
-import { api, CourseCandidate, CourseJobResponse, MyCourseJob } from "@/lib/api";
+import { api, CourseCandidate, CourseJobResponse } from "@/lib/api";
 import { readTrackedJobId, writeTrackedJobId } from "@/lib/tracked-job";
 
 interface SimilarSubmit {
@@ -30,6 +30,10 @@ export default function LearnPage() {
   // /learn doesn't lose all trace of an in-flight job.
   const [jobId, setJobId] = useState<number | null>(() => readTrackedJobId());
   const [similar, setSimilar] = useState<SimilarSubmit | null>(null);
+  // Topic + start time for the tracked job, kept locally so the panel can show
+  // an elapsed timer immediately — before the 4s `myJobs` poll catches up.
+  const [trackedTopic, setTrackedTopic] = useState<string | null>(null);
+  const [trackedStartAtMs, setTrackedStartAtMs] = useState<number | null>(null);
 
   // Auth is gated by (app)/layout.tsx for every route in this group.
 
@@ -46,6 +50,8 @@ export default function LearnPage() {
       } else if (data.job_id) {
         setJobId(data.job_id);
         writeTrackedJobId(data.job_id);
+        setTrackedTopic(input.topic);
+        setTrackedStartAtMs(Date.now());
         setTopic("");
         setSimilar(null);
       }
@@ -76,6 +82,8 @@ export default function LearnPage() {
     setClearedMissingJobId(jobId);
     writeTrackedJobId(null);
     setJobId(null);
+    setTrackedTopic(null);
+    setTrackedStartAtMs(null);
   }
 
   useEffect(() => {
@@ -91,25 +99,22 @@ export default function LearnPage() {
     refetchInterval: 4000,
   });
 
-  // Only jobs still in flight belong here — a finished one has nothing left
-  // to track, and course creation itself is blocked below while any job is
-  // ongoing, so this can only ever hold pending/running work.
-  const otherJobs = (myJobs.data ?? []).filter(
-    (j) => j.id !== jobId && (j.status === "pending" || j.status === "running")
-  );
-
-  // The job API doesn't return a start time; the tracked job's `created_at`
-  // from the jobs list does, and it polls every 4s, so elapsed time is
-  // available for jobs this browser did not itself create.
-  const trackedJobStartedAt =
-    jobId !== null ? myJobs.data?.find((j) => j.id === jobId)?.created_at ?? null : null;
-
   const busy = createCourse.isPending || jobStatus.data?.status === "pending" || jobStatus.data?.status === "running";
+
+  function trackJob(id: number) {
+    const job = myJobs.data?.find((j) => j.id === id);
+    setJobId(id);
+    writeTrackedJobId(id);
+    setTrackedTopic(job?.topic_raw ?? null);
+    setTrackedStartAtMs(job ? new Date(job.created_at).getTime() : Date.now());
+  }
 
   function startOver() {
     writeTrackedJobId(null);
     setJobId(null);
     setSimilar(null);
+    setTrackedTopic(null);
+    setTrackedStartAtMs(null);
     createCourse.reset();
   }
 
@@ -143,6 +148,8 @@ export default function LearnPage() {
                   onTrack={() => {
                     setJobId(c.id);
                     writeTrackedJobId(c.id);
+                    setTrackedTopic(c.topic_raw);
+                    setTrackedStartAtMs(Date.now());
                     setSimilar(null);
                   }}
                 />
@@ -167,36 +174,20 @@ export default function LearnPage() {
         )}
       </LearnHero>
 
-      {jobId !== null && (
-        <LearnGenerationStatus
-          status={jobStatus.data?.status ?? "pending"}
-          error={jobStatus.data?.error ?? null}
-          isLoading={jobStatus.isLoading && !jobStatus.data}
-          startedAt={trackedJobStartedAt}
-          onRetry={startOver}
-        />
-      )}
+      <LearnGenerationsPanel
+        jobs={myJobs.data ?? []}
+        trackedJobId={jobId}
+        trackedTopic={trackedTopic}
+        trackedStatus={jobId !== null ? jobStatus.data?.status ?? "pending" : null}
+        trackedError={jobStatus.data?.error ?? null}
+        trackedStartAtMs={trackedStartAtMs}
+        pendingTopic={createCourse.isPending ? topic.trim() || null : null}
+        onTrack={trackJob}
+        onRetry={startOver}
+      />
 
-      {jobStatus.isError && (
+      {jobStatus.isError && !trackedJobMissing && (
         <p className="text-sm text-destructive">Failed to check course generation status. Please try again.</p>
-      )}
-
-      {otherJobs.length > 0 && (
-        <section className="space-y-3">
-          <h2 className="text-sm font-medium text-muted-foreground">Your other courses in progress</h2>
-          <div className="space-y-2">
-            {otherJobs.map((job) => (
-              <OtherJobRow
-                key={job.id}
-                job={job}
-                onTrack={() => {
-                  setJobId(job.id);
-                  writeTrackedJobId(job.id);
-                }}
-              />
-            ))}
-          </div>
-        </section>
       )}
 
       <LearnExploreCourses />
@@ -233,28 +224,6 @@ function SimilarCourseRow({ candidate, onTrack }: { candidate: CourseCandidate; 
 
   if (published) {
     return <Link href={published}>{content}</Link>;
-  }
-  return (
-    <button type="button" onClick={onTrack} className="block w-full text-left">
-      {content}
-    </button>
-  );
-}
-
-function OtherJobRow({ job, onTrack }: { job: MyCourseJob; onTrack: () => void }) {
-  const content = (
-    <Card className="spotlight-border transition-colors hover:bg-card/80">
-      <CardContent className="flex items-center justify-between gap-3 py-3">
-        <div className="min-w-0">
-          <p className="truncate text-sm font-medium">{job.topic_raw}</p>
-        </div>
-        <JobBadge status={job.status} />
-      </CardContent>
-    </Card>
-  );
-
-  if (job.status === "succeeded" && job.course_slug) {
-    return <Link href={`/courses/${job.course_slug}`}>{content}</Link>;
   }
   return (
     <button type="button" onClick={onTrack} className="block w-full text-left">
