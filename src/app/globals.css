@@ -10,6 +10,9 @@
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
+  --font-display: var(--font-fraunces);
+  --color-paper: var(--paper);
+  --color-paper-foreground: var(--paper-foreground);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -51,29 +54,33 @@
 }
 
 :root {
-  /* Brand — teal → green. */
+  /* Brand — teal → green. Kept independent from the neutral hue below so it
+     reads as an accent, not a tint that bleeds into every gray. */
   --brand: oklch(0.6 0.118 184.704);
   --brand-accent: oklch(0.627 0.194 149.219);
   --brand-strong: oklch(0.511 0.096 186.391);
   --brand-glow: oklch(0.6 0.118 184.704 / 45%);
+  /* Paper — warm index-card surface, used sparingly for numbering / callouts. */
+  --paper: oklch(0.93 0.014 80);
+  --paper-foreground: oklch(0.22 0.014 80);
 
   --background: oklch(1 0 0);
-  --foreground: oklch(0.2 0.02 190);
+  --foreground: oklch(0.2 0.01 75);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.2 0.02 190);
+  --card-foreground: oklch(0.2 0.01 75);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.2 0.02 190);
+  --popover-foreground: oklch(0.2 0.01 75);
   --primary: oklch(0.511 0.096 186.391);
-  --primary-foreground: oklch(0.985 0.005 190);
-  --secondary: oklch(0.96 0.015 190);
-  --secondary-foreground: oklch(0.3 0.04 190);
-  --muted: oklch(0.965 0.012 190);
-  --muted-foreground: oklch(0.5 0.02 190);
-  --accent: oklch(0.95 0.03 190);
-  --accent-foreground: oklch(0.3 0.04 190);
+  --primary-foreground: oklch(0.985 0.003 75);
+  --secondary: oklch(0.96 0.006 75);
+  --secondary-foreground: oklch(0.3 0.012 75);
+  --muted: oklch(0.965 0.005 75);
+  --muted-foreground: oklch(0.5 0.008 75);
+  --accent: oklch(0.95 0.03 149);
+  --accent-foreground: oklch(0.3 0.012 75);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.9 0.02 190);
-  --input: oklch(0.9 0.02 190);
+  --border: oklch(0.9 0.006 75);
+  --input: oklch(0.9 0.006 75);
   --ring: oklch(0.511 0.096 186.391);
   --chart-1: oklch(0.704 0.14 182.503);
   --chart-2: oklch(0.723 0.219 149.579);
@@ -81,47 +88,49 @@
   --chart-4: oklch(0.696 0.17 162.48);
   --chart-5: oklch(0.768 0.233 130.85);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0.008 190);
-  --sidebar-foreground: oklch(0.2 0.02 190);
+  --sidebar: oklch(0.985 0.003 75);
+  --sidebar-foreground: oklch(0.2 0.01 75);
   --sidebar-primary: oklch(0.511 0.096 186.391);
-  --sidebar-primary-foreground: oklch(0.985 0.005 190);
-  --sidebar-accent: oklch(0.95 0.03 190);
-  --sidebar-accent-foreground: oklch(0.3 0.04 190);
-  --sidebar-border: oklch(0.9 0.02 190);
+  --sidebar-primary-foreground: oklch(0.985 0.003 75);
+  --sidebar-accent: oklch(0.95 0.03 149);
+  --sidebar-accent-foreground: oklch(0.3 0.012 75);
+  --sidebar-border: oklch(0.9 0.006 75);
   --sidebar-ring: oklch(0.511 0.096 186.391);
 }
 
 .dark {
-  --background: oklch(0.15 0.015 190);
-  --foreground: oklch(0.97 0.005 190);
-  --card: oklch(0.19 0.018 190);
-  --card-foreground: oklch(0.97 0.005 190);
-  --popover: oklch(0.19 0.018 190);
-  --popover-foreground: oklch(0.97 0.005 190);
+  /* Warm ink, not cool tech-gray — the brand teal/green carries the color,
+     the neutrals stay quiet and slightly warm so the accent doesn't blend in. */
+  --background: oklch(0.155 0.006 75);
+  --foreground: oklch(0.96 0.004 75);
+  --card: oklch(0.205 0.007 75);
+  --card-foreground: oklch(0.96 0.004 75);
+  --popover: oklch(0.205 0.007 75);
+  --popover-foreground: oklch(0.96 0.004 75);
   --primary: oklch(0.6 0.118 184.704);
-  --primary-foreground: oklch(0.985 0.005 190);
-  --secondary: oklch(0.26 0.022 190);
-  --secondary-foreground: oklch(0.97 0.005 190);
-  --muted: oklch(0.235 0.016 190);
-  --muted-foreground: oklch(0.73 0.02 190);
-  --accent: oklch(0.3 0.035 190);
-  --accent-foreground: oklch(0.98 0.005 190);
+  --primary-foreground: oklch(0.985 0.003 75);
+  --secondary: oklch(0.265 0.008 75);
+  --secondary-foreground: oklch(0.96 0.004 75);
+  --muted: oklch(0.23 0.007 75);
+  --muted-foreground: oklch(0.66 0.009 75);
+  --accent: oklch(0.29 0.032 149);
+  --accent-foreground: oklch(0.97 0.004 75);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(0.72 0.06 190 / 16%);
-  --input: oklch(0.72 0.06 190 / 22%);
+  --border: oklch(0.75 0.02 75 / 12%);
+  --input: oklch(0.75 0.02 75 / 18%);
   --ring: oklch(0.6 0.118 184.704);
   --chart-1: oklch(0.704 0.14 182.503);
   --chart-2: oklch(0.723 0.219 149.579);
   --chart-3: oklch(0.715 0.143 215.221);
   --chart-4: oklch(0.696 0.17 162.48);
   --chart-5: oklch(0.768 0.233 130.85);
-  --sidebar: oklch(0.16 0.016 190);
-  --sidebar-foreground: oklch(0.97 0.005 190);
+  --sidebar: oklch(0.15 0.006 75);
+  --sidebar-foreground: oklch(0.96 0.004 75);
   --sidebar-primary: oklch(0.6 0.118 184.704);
-  --sidebar-primary-foreground: oklch(0.985 0.005 190);
-  --sidebar-accent: oklch(0.28 0.035 190);
-  --sidebar-accent-foreground: oklch(0.98 0.005 190);
-  --sidebar-border: oklch(0.72 0.06 190 / 16%);
+  --sidebar-primary-foreground: oklch(0.985 0.003 75);
+  --sidebar-accent: oklch(0.26 0.03 149);
+  --sidebar-accent-foreground: oklch(0.97 0.004 75);
+  --sidebar-border: oklch(0.75 0.02 75 / 12%);
   --sidebar-ring: oklch(0.6 0.118 184.704);
 }
 
@@ -135,13 +144,19 @@
   /* Ambient brand wash behind the app shell. */
   .dark body {
     background-image:
-      radial-gradient(55rem 55rem at 8% -12%, color-mix(in oklch, var(--brand) 20%, transparent), transparent 60%),
-      radial-gradient(48rem 48rem at 108% 2%, color-mix(in oklch, var(--brand-accent) 16%, transparent), transparent 58%);
+      radial-gradient(60rem 46rem at 12% -14%, color-mix(in oklch, var(--brand) 16%, transparent), transparent 60%),
+      radial-gradient(50rem 42rem at 104% 6%, color-mix(in oklch, var(--brand-accent) 13%, transparent), transparent 58%);
     background-attachment: fixed;
     background-repeat: no-repeat;
   }
   html {
     @apply font-sans;
+  }
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
   }
   ::selection {
     background: color-mix(in oklch, var(--brand) 35%, transparent);
@@ -152,6 +167,15 @@
   /* Logo gradient as reusable paint. */
   .bg-brand-gradient {
     background-image: linear-gradient(135deg, var(--brand) 0%, var(--brand-accent) 100%);
+  }
+  /* Sliding indeterminate progress bar — used where we track real elapsed
+     time but have no percentage (long-running generation jobs). */
+  @keyframes indeterminate-slide {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(400%); }
+  }
+  .animate-indeterminate {
+    animation: indeterminate-slide 1.6s ease-in-out infinite;
   }
   .text-brand-gradient {
     background-image: linear-gradient(120deg, var(--brand) 10%, var(--brand-accent) 90%);
@@ -171,9 +195,154 @@
   .shadow-brand {
     box-shadow: 0 10px 30px -12px var(--brand-glow);
   }
+  .font-display {
+    font-family: var(--font-display);
+  }
+  /* Fixed grain layer — breaks up flat gradient fields. Pointer-events off so
+     it never intercepts clicks; opacity kept low so it reads as texture, not noise. */
+  .bg-grain {
+    position: relative;
+    isolation: isolate;
+  }
+  .bg-grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.05;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+  /* Border that lights up in the brand hue under the cursor. Set --spot-x/--spot-y via onMouseMove. */
+  .spotlight-border {
+    position: relative;
+  }
+  .spotlight-border::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: radial-gradient(
+      220px circle at var(--spot-x, 50%) var(--spot-y, 0%),
+      color-mix(in oklch, var(--brand) 65%, transparent),
+      transparent 70%
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 300ms ease;
+    pointer-events: none;
+  }
+  .spotlight-border:hover::before {
+    opacity: 1;
+  }
 }
 
 a,
 button {
   cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Typography for LLM-authored markdown (chapter content, worked examples).
+   react-markdown emits bare h1–h6/ul/ol/blockquote/code with zero styling of
+   their own, so without this every heading level collapses to look like a
+   plain paragraph. */
+.markdown-body > :first-child {
+  margin-top: 0;
+}
+.markdown-body h1, .markdown-body h2 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1.25rem;
+  letter-spacing: -0.01em;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+}
+.markdown-body h3, .markdown-body h4, .markdown-body h5, .markdown-body h6 {
+  font-weight: 600;
+  font-size: 1.0625rem;
+  margin-top: 1.75rem;
+  margin-bottom: 0.5rem;
+}
+.markdown-body p {
+  margin-top: 0;
+  margin-bottom: 1.1em;
+}
+.markdown-body ul, .markdown-body ol {
+  margin-top: 0;
+  margin-bottom: 1.1em;
+  padding-left: 1.4em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4em;
+}
+.markdown-body ul { list-style: disc; }
+.markdown-body ol { list-style: decimal; }
+.markdown-body ol::marker, .markdown-body li::marker {
+  color: var(--brand);
+}
+.markdown-body li > ul, .markdown-body li > ol {
+  margin-top: 0.4em;
+  margin-bottom: 0;
+}
+.markdown-body strong {
+  font-weight: 600;
+}
+.markdown-body blockquote {
+  border-left: 2px solid var(--brand);
+  padding-left: 1rem;
+  margin: 1.1em 0;
+  opacity: 0.75;
+  font-style: italic;
+}
+.markdown-body a {
+  color: var(--brand);
+  text-underline-offset: 3px;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in oklch, var(--brand) 40%, transparent);
+}
+.markdown-body :not(pre) > code {
+  background: color-mix(in oklch, currentColor 12%, transparent);
+  border-radius: 0.3em;
+  padding: 0.15em 0.4em;
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+}
+.markdown-body pre {
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  margin: 1.1em 0;
+  font-size: 0.85em;
+  line-height: 1.6;
+}
+.markdown-body hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 2em 0;
+}
+.markdown-body table {
+  border-collapse: collapse;
+  margin: 1.1em 0;
+  font-size: 0.9em;
+}
+.markdown-body th, .markdown-body td {
+  border: 1px solid color-mix(in oklch, currentColor 15%, transparent);
+  padding: 0.5em 0.75em;
+  text-align: left;
+}
+.markdown-body th {
+  font-weight: 600;
+  background: color-mix(in oklch, currentColor 8%, transparent);
 }

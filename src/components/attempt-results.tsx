@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Check, X, GraduationCap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -49,7 +50,7 @@ export function AttemptResults({ slug, assignmentId, attemptId }: AttemptResults
       <Card>
         <CardContent className="flex items-center justify-between gap-4 py-4">
           <div>
-            <p className="text-3xl font-semibold tracking-tight">{scorePct}%</p>
+            <p className="font-mono text-4xl font-medium tracking-tight tabular-nums">{scorePct}%</p>
             <p className="text-sm text-muted-foreground">Overall score</p>
           </div>
           {data.passed !== null && (
@@ -72,8 +73,13 @@ export function AttemptResults({ slug, assignmentId, attemptId }: AttemptResults
         {data.answers.map((a) => (
           <Card key={a.question_id}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm">
-                {a.is_correct ? "✅ Correct" : "❌ Incorrect"}
+              <CardTitle className="flex items-center gap-1.5 text-sm">
+                {a.is_correct ? (
+                  <Check className="text-brand-accent size-4" strokeWidth={2.5} />
+                ) : (
+                  <X className="text-destructive size-4" strokeWidth={2.5} />
+                )}
+                {a.is_correct ? "Correct" : "Incorrect"}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -85,12 +91,12 @@ export function AttemptResults({ slug, assignmentId, attemptId }: AttemptResults
       <div className="pt-2">
         {data.level === "chapter" && data.passed && data.next_chapter_id && (
           <Button nativeButton={false} render={<Link href={`/courses/${slug}/chapters/${data.next_chapter_id}`} />}>
-            Next chapter →
+            Continue to next chapter
           </Button>
         )}
         {data.level === "chapter" && data.passed && !data.next_chapter_id && (
           <Button nativeButton={false} render={<Link href={`/courses/${slug}`} />}>
-            🎉 Course complete — back to course
+            <GraduationCap /> Course complete — back to course
           </Button>
         )}
         {data.level === "chapter" && !data.passed && data.chapter_id && (

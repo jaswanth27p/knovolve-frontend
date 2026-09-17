@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/empty-state";
 import { DashboardSkeleton, CourseListSkeleton } from "@/components/skeletons";
 import { ActivitySection } from "@/components/activity-section";
-import { BookOpen } from "lucide-react";
+import { BookOpen, Layers, CircleCheck, Flame } from "lucide-react";
 import { api } from "@/lib/api";
+
+const STAT_ICONS = [Layers, BookOpen, CircleCheck, Flame] as const;
 
 export default function DashboardPage() {
   const { data, isLoading, isError } = useQuery({
@@ -35,8 +37,8 @@ export default function DashboardPage() {
   const courses = coursesQuery.data?.items ?? [];
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col space-y-6 px-6 py-10">
-      <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
+    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col space-y-8 px-6 py-10">
+      <h1 className="font-display text-3xl font-medium tracking-tight">Dashboard</h1>
 
       {isLoading && <DashboardSkeleton />}
       {isError && <p className="text-destructive">Failed to load dashboard.</p>}
@@ -44,23 +46,23 @@ export default function DashboardPage() {
       {data && (
         <>
           <div className="grid gap-3 sm:grid-cols-4">
-            {stats.map((s) => (
-              <Card key={s.label}>
-                <CardHeader className="pb-2">
-                  <CardDescription>{s.label}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-semibold">{s.value}</div>
-                </CardContent>
-              </Card>
-            ))}
+            {stats.map((s, i) => {
+              const Icon = STAT_ICONS[i];
+              return (
+                <div key={s.label} className="rounded-xl bg-card p-4 ring-1 ring-foreground/10">
+                  <Icon className="text-brand size-4" strokeWidth={1.75} />
+                  <div className="mt-3 font-mono text-2xl font-medium tabular-nums">{s.value}</div>
+                  <p className="mt-0.5 text-xs text-muted-foreground">{s.label}</p>
+                </div>
+              );
+            })}
           </div>
 
           <ActivitySection />
 
           <section className="space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Your courses</h2>
+              <h2 className="font-display text-xl font-medium">Your courses</h2>
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/courses" />}>View all</Button>
                 <Button size="sm" nativeButton={false} render={<Link href="/learn" />}>Create a course</Button>
@@ -81,7 +83,7 @@ export default function DashboardPage() {
             <div className="space-y-2">
               {courses.map((c) => (
                 <Link key={c.id} href={`/courses/${c.topic_slug}`}>
-                  <Card className="transition-shadow hover:shadow">
+                  <Card className="spotlight-border transition-colors hover:bg-card/80">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-base">{c.topic_raw}</CardTitle>
                       <CardDescription>

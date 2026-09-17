@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/empty-state";
 import { CourseDetailSkeleton } from "@/components/skeletons";
 import { Hourglass } from "lucide-react";
@@ -28,14 +29,14 @@ export default function CourseDetailPage() {
       {isError && <p className="text-destructive">Failed to load course.</p>}
       {data && (
         <>
-          <h1 className="text-2xl font-semibold tracking-tight">{data.topic_raw}</h1>
+          <h1 className="font-display text-3xl font-medium tracking-tight">{data.topic_raw}</h1>
           <div className="flex flex-wrap items-center gap-2">
             <ExportDialog slug={data.topic_slug} />
             <ExportHistoryDialog slug={data.topic_slug} />
             <GenerateCourseButton slug={data.topic_slug} />
           </div>
           {trackedCourse && (
-            <div className="flex flex-col gap-3 rounded-md border border-border p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-3 rounded-xl bg-card p-4 ring-1 ring-foreground/10 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm font-medium">
                   {trackedCourse.status === "completed" ? "Completed" : `In progress · ${Math.round(trackedCourse.progress * 100)}%`}
@@ -49,19 +50,24 @@ export default function CourseDetailPage() {
               </div>
               <div className="flex flex-wrap gap-2">
                 {data.modules[0]?.chapters[0] && (
-                  <Link
-                    href={`/courses/${data.topic_slug}/chapters/${data.modules[0].chapters[0].id}`}
-                    className="shrink-0 whitespace-nowrap rounded-md bg-brand-gradient px-3 py-1.5 text-sm text-white shadow-brand"
+                  <Button
+                    size="sm"
+                    className="shrink-0"
+                    nativeButton={false}
+                    render={<Link href={`/courses/${data.topic_slug}/chapters/${data.modules[0].chapters[0].id}`} />}
                   >
                     {trackedCourse.progress > 0 ? "Resume" : "Start"}
-                  </Link>
+                  </Button>
                 )}
-                <Link
-                  href={`/courses/${params.slug}/extend`}
-                  className="shrink-0 whitespace-nowrap rounded-md border border-border px-3 py-1.5 text-sm hover:bg-accent"
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="shrink-0"
+                  nativeButton={false}
+                  render={<Link href={`/courses/${params.slug}/extend`} />}
                 >
                   Extend course
-                </Link>
+                </Button>
               </div>
             </div>
           )}
@@ -76,10 +82,10 @@ export default function CourseDetailPage() {
           <div className="space-y-3">
             {data.modules.map((m, i) => (
               <Link key={m.id} href={`/courses/${data.topic_slug}/modules/${m.id}`}>
-                <Card className="transition-shadow hover:shadow">
+                <Card className="spotlight-border transition-colors hover:bg-card/80">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-lg">
-                      <span className="text-muted-foreground dark:text-muted-foreground">{i + 1}.</span>
+                      <span className="font-display text-brand-gradient">{i + 1}.</span>
                       {m.title}
                     </CardTitle>
                   </CardHeader>

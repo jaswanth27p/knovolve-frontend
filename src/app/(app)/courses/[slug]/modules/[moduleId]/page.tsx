@@ -34,23 +34,23 @@ export default function ModuleDetailPage() {
           </Link>
 
           <div className="space-y-1">
-            <h1 className="text-2xl font-semibold tracking-tight">{mod.title}</h1>
+            <h1 className="font-display text-3xl font-medium tracking-tight">{mod.title}</h1>
             <p className="text-sm text-muted-foreground">{mod.objective}</p>
           </div>
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Chapters</CardTitle>
+              <CardTitle className="font-display text-base font-medium">Chapters</CardTitle>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-2">
+              <ul className="space-y-1">
                 {mod.chapters.map((c, i) => (
                   <li key={c.id}>
                     <Link
                       href={`/courses/${params.slug}/chapters/${c.id}`}
-                      className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted dark:hover:bg-muted"
+                      className="flex items-center gap-2.5 rounded-lg px-2 py-2 text-sm transition-colors hover:bg-muted"
                     >
-                      <span className="text-muted-foreground dark:text-muted-foreground">{i + 1}.</span>
+                      <span className="font-display text-brand-gradient shrink-0">{i + 1}.</span>
                       {c.title}
                     </Link>
                   </li>

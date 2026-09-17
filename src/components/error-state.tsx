@@ -16,9 +16,9 @@ export function ErrorState({ error, reset, title = "Something went wrong" }: Err
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center gap-4 px-6 py-20 text-center">
-      <AlertTriangle className="size-8 text-destructive" />
+      <AlertTriangle className="size-8 text-destructive" strokeWidth={1.75} />
       <div className="space-y-1">
-        <h2 className="text-lg font-semibold">{title}</h2>
+        <h2 className="font-display text-xl font-medium">{title}</h2>
         <p className="text-sm text-muted-foreground">
           Please try again, or head back if the problem persists.
         </p>

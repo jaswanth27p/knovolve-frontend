@@ -6,7 +6,7 @@ import {
   ChartContainer, ChartTooltip, ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
-import { Card, CardHeader, CardDescription } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
 import { buildActivitySeries } from "@/lib/activity";
@@ -25,11 +25,20 @@ const masteryConfig = {
   avgScore: { label: "Avg score", color: "var(--chart-2)" },
 } satisfies ChartConfig;
 
-function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
+function ChartCard({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description: string;
+  children: React.ReactNode;
+}) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardDescription>{title}</CardDescription>
+        <CardTitle className="font-display text-base font-medium">{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
       <div className="h-40 px-2 pb-3">{children}</div>
     </Card>
@@ -70,7 +79,7 @@ export function ActivitySection() {
   if (!hasData) {
     return (
       <Card>
-        <CardHeader className="pb-2"><CardDescription>Activity</CardDescription></CardHeader>
+        <CardHeader className="pb-2"><CardTitle className="font-display text-base font-medium">Activity</CardTitle></CardHeader>
         <div className="px-6 pb-5 text-sm text-muted-foreground">
           No activity in the last 14 days.
         </div>
@@ -80,26 +89,26 @@ export function ActivitySection() {
 
   return (
     <div className="grid gap-3 sm:grid-cols-2">
-      <ChartCard title="Activity · assignments per day">
+      <ChartCard title="Activity" description="Assignments completed per day">
         <ChartContainer config={activityConfig} style={{ aspectRatio: "auto", height: "100%" }}>
           <BarChart data={series}>
             <CartesianGrid vertical={false} className="stroke-border" />
             <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} tick={{ fontSize: 11 }} />
             <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={24} tick={{ fontSize: 11 }} />
-            <ChartTooltip content={<ChartTooltipContent />} cursor={{ fill: "rgba(0,0,0,0.05)" }} />
+            <ChartTooltip content={<ChartTooltipContent />} cursor={{ fill: "rgba(255,255,255,0.06)" }} />
             <Bar dataKey="assignments" fill="var(--color-assignments)" radius={[3, 3, 0, 0]} />
           </BarChart>
         </ChartContainer>
       </ChartCard>
 
-      <ChartCard title="Mastery · chapters + avg score">
+      <ChartCard title="Mastery" description="Chapters completed and average score">
         <ChartContainer config={masteryConfig} style={{ aspectRatio: "auto", height: "100%" }}>
           <ComposedChart data={series}>
             <CartesianGrid vertical={false} className="stroke-border" />
             <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} tick={{ fontSize: 11 }} />
             <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={24} tick={{ fontSize: 11 }} />
             <YAxis yAxisId="score" orientation="right" domain={[0, 1]} tickLine={false} axisLine={false} width={28} tick={{ fontSize: 11 }} />
-            <ChartTooltip content={<ChartTooltipContent />} cursor={{ fill: "rgba(0,0,0,0.05)" }} />
+            <ChartTooltip content={<ChartTooltipContent />} cursor={{ fill: "rgba(255,255,255,0.06)" }} />
             <Bar yAxisId={0} dataKey="chaptersCompleted" fill="var(--color-chaptersCompleted)" radius={[3, 3, 0, 0]} />
             <Line yAxisId="score" dataKey="avgScore" type="monotone"
                   stroke="var(--color-avgScore)" strokeWidth={2} dot={{ r: 2, strokeWidth: 0 }} />

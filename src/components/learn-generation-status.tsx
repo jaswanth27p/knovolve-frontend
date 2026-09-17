@@ -90,7 +90,7 @@ export function LearnGenerationStatus({
               aria-valuetext="Course generation in progress"
               className="h-1.5 w-full overflow-hidden rounded-full bg-muted"
             >
-              <div className="h-full w-1/3 animate-pulse rounded-full bg-brand-gradient" />
+              <div className="animate-indeterminate h-full w-1/3 rounded-full bg-brand-gradient" />
             </div>
             <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
               <span>Usually takes 10–15 minutes — you can leave this page and come back.</span>

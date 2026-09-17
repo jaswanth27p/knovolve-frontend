@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogClose,
@@ -22,12 +23,19 @@ const EXTENSION_STATUS_LABEL: Record<string, string> = {
   failed: "Failed",
 };
 
-const EXTENSION_STATUS_CLASS: Record<string, string> = {
-  pending: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200",
-  running: "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200",
-  succeeded: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200",
-  failed: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200",
-};
+function ExtensionStatusBadge({ status }: { status: string }) {
+  const label = EXTENSION_STATUS_LABEL[status] ?? status;
+  if (status === "pending" || status === "running") {
+    return (
+      <Badge variant="secondary">
+        <Loader2 className="size-3 animate-spin" />
+        {label}
+      </Badge>
+    );
+  }
+  if (status === "failed") return <Badge variant="destructive">{label}</Badge>;
+  return <Badge variant="outline">{label}</Badge>;
+}
 
 export default function CourseExtendPage() {
   const params = useParams<{ slug: string }>();
@@ -89,7 +97,7 @@ export default function CourseExtendPage() {
       </Link>
 
       <div className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Extend this course</h1>
+        <h1 className="font-display text-3xl font-medium tracking-tight">Extend this course</h1>
         <p className="text-sm text-muted-foreground">
           Ask for chapters covering concepts this course doesn&apos;t teach. They&apos;re added under &quot;Additional Chapters&quot;.
         </p>
@@ -101,7 +109,7 @@ export default function CourseExtendPage() {
           onChange={(e) => setMessage(e.target.value)}
           placeholder="e.g. add a chapter on TCP three-way handshake and another on DNS resolution"
           rows={4}
-          className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          className="focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-lg border border-border bg-background p-3 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus-visible:ring-3 disabled:cursor-not-allowed disabled:opacity-50"
         />
         <Button onClick={() => createMutation.mutate()} disabled={running || !message.trim()}>
           {createMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
@@ -126,7 +134,7 @@ export default function CourseExtendPage() {
 
       {jobs.length > 0 && (
         <div className="space-y-2">
-          <h2 className="text-lg font-semibold">Extension requests</h2>
+          <h2 className="font-display text-xl font-medium">Extension requests</h2>
           <p className="text-sm text-muted-foreground">
             {activeJob
               ? "Still running — you can leave this page. It keeps going and re-attaches when you return."
@@ -136,7 +144,7 @@ export default function CourseExtendPage() {
             {jobs.map((j, i) => (
               <div
                 key={j.job_id ?? i}
-                className="flex items-start justify-between gap-3 rounded-md border border-border p-3 dark:border-border"
+                className="flex items-start justify-between gap-3 rounded-xl bg-card p-3 ring-1 ring-foreground/10"
               >
                 <div className="min-w-0">
                   <p className="truncate text-sm">{j.request ?? "Extension request"}</p>
@@ -148,17 +156,7 @@ export default function CourseExtendPage() {
                     {j.status === "failed" && j.error ? ` · ${j.error}` : ""}
                   </p>
                 </div>
-                <span
-                  className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-xs ${
-                    EXTENSION_STATUS_CLASS[j.status] ??
-                    "bg-muted text-foreground"
-                  }`}
-                >
-                  {(j.status === "pending" || j.status === "running") && (
-                    <Loader2 className="size-3 animate-spin" />
-                  )}
-                  {EXTENSION_STATUS_LABEL[j.status] ?? j.status}
-                </span>
+                <ExtensionStatusBadge status={j.status} />
               </div>
             ))}
           </div>
@@ -166,10 +164,10 @@ export default function CourseExtendPage() {
       )}
 
       <div className="space-y-2">
-        <h2 className="text-lg font-semibold">Your added chapters</h2>
+        <h2 className="font-display text-xl font-medium">Your added chapters</h2>
         {!chaptersQuery.data?.length && <p className="text-sm text-muted-foreground">No chapters added yet.</p>}
         {chaptersQuery.data?.map((c) => (
-          <div key={c.id} className="flex items-center justify-between rounded-md border border-border p-3 dark:border-border">
+          <div key={c.id} className="flex items-center justify-between rounded-xl bg-card p-3 ring-1 ring-foreground/10">
             <div>
               <p className="text-sm font-medium">{c.title}</p>
               <p className="text-xs text-muted-foreground">{c.objective}</p>

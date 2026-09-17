@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AuthShell } from "@/components/auth-shell";
 import { api, parseExportApiError } from "@/lib/api";
 import { setCurrentAccount } from "@/lib/tracked-job";
 import { useRedirectIfLoggedIn } from "@/lib/use-auth-redirect";
@@ -51,25 +52,32 @@ export default function RegisterPage() {
   if (alreadyAuthed) return null;
 
   return (
-    <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center space-y-6 px-6">
+    <AuthShell>
       <div className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Create your account</h1>
+        <h1 className="font-display text-3xl font-medium tracking-tight">Create your account</h1>
         <p className="text-sm text-muted-foreground">
           Generate and revisit your courses.
         </p>
       </div>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <Input placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        <Input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
+      <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+        <div className="space-y-1.5">
+          <label htmlFor="email" className="text-sm font-medium">Email</label>
+          <Input id="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        </div>
+        <div className="space-y-1.5">
+          <label htmlFor="password" className="text-sm font-medium">Password</label>
+          <Input id="password" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <p className="text-xs text-muted-foreground">At least 8 characters.</p>
+        </div>
         {error && <p className="text-sm text-destructive">{error}</p>}
-        <Button type="submit" className="w-full">Register</Button>
+        <Button type="submit" className="w-full">Create account</Button>
       </form>
-      <p className="text-center text-sm text-muted-foreground">
+      <p className="mt-6 text-sm text-muted-foreground">
         Already have an account?{" "}
         <Link href="/login" className="font-medium text-foreground underline-offset-4 hover:underline">
           Log in
         </Link>
       </p>
-    </div>
+    </AuthShell>
   );
 }

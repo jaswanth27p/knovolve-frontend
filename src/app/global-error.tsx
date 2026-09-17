@@ -23,7 +23,7 @@ export default function GlobalError({
         <p className="text-sm text-muted-foreground">Please try again.</p>
         <button
           onClick={reset}
-          className="rounded-md border border-border px-4 py-2 text-sm dark:border-border"
+          className="rounded-md border border-border px-4 py-2 text-sm"
         >
           Try again
         </button>

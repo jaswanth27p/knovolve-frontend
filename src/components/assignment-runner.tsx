@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -136,7 +137,7 @@ export function AssignmentRunner({ slug, assignmentId, cacheKey, fetchAssignment
           )}
         </div>
         {attempts.length > 1 && (
-          <div className="space-y-2 border-t border-border pt-4 dark:border-border">
+          <div className="space-y-2 border-t border-border pt-4">
             <h3 className="text-sm font-medium text-muted-foreground">Past attempts</h3>
             <div className="space-y-1.5">
               {attempts.map((a, i) => (
@@ -145,7 +146,7 @@ export function AssignmentRunner({ slug, assignmentId, cacheKey, fetchAssignment
                   type="button"
                   onClick={() => setSelectedAttemptId(a.id)}
                   className={
-                    "flex w-full items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted dark:hover:bg-muted"
+                    "flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-left text-sm transition-colors hover:bg-muted"
                     + (a.id === selected.id ? " bg-muted" : "")
                   }
                 >
@@ -175,39 +176,52 @@ export function AssignmentRunner({ slug, assignmentId, cacheKey, fetchAssignment
   return (
     <div className="space-y-4">
       {latest && retaking && (
-        <button type="button" onClick={() => setRetaking(false)} className="text-sm text-muted-foreground underline dark:text-muted-foreground">
-          ← Back to latest result
+        <button type="button" onClick={() => setRetaking(false)} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+          <ChevronLeft className="size-4" />
+          Back to latest result
         </button>
       )}
-      {data.questions.map((q) => (
+      {data.questions.map((q, i) => (
         <Card key={q.id}>
           <CardHeader>
-            <CardTitle className="text-base"><InlineMarkdown>{q.text}</InlineMarkdown></CardTitle>
+            <CardTitle className="text-base">
+              <span className="text-muted-foreground">{i + 1}. </span>
+              <InlineMarkdown>{q.text}</InlineMarkdown>
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {q.type === "mcq" && q.options?.map((opt) => (
-              <label key={opt} className="flex items-center gap-2 text-sm">
+              <label
+                key={opt}
+                className="has-[:checked]:border-brand has-[:checked]:bg-accent flex items-center gap-2.5 rounded-lg border border-border px-3 py-2.5 text-sm transition-colors hover:bg-muted"
+              >
                 <input
                   type="radio" name={`q-${q.id}`} value={opt}
                   checked={answers[q.id] === opt}
                   onChange={() => setAnswers((prev) => ({ ...prev, [q.id]: opt }))}
+                  className="accent-brand size-4"
                 />
                 <InlineMarkdown>{opt}</InlineMarkdown>
               </label>
             ))}
             {q.type === "true_false" && ["true", "false"].map((opt) => (
-              <label key={opt} className="flex items-center gap-2 text-sm">
+              <label
+                key={opt}
+                className="has-[:checked]:border-brand has-[:checked]:bg-accent flex items-center gap-2.5 rounded-lg border border-border px-3 py-2.5 text-sm capitalize transition-colors hover:bg-muted"
+              >
                 <input
                   type="radio" name={`q-${q.id}`} value={opt}
                   checked={answers[q.id] === opt}
                   onChange={() => setAnswers((prev) => ({ ...prev, [q.id]: opt }))}
+                  className="accent-brand size-4"
                 />
                 {opt}
               </label>
             ))}
             {q.type === "free_text" && (
               <textarea
-                className="w-full rounded-md border border-border p-2 text-sm dark:border-border"
+                className="focus-visible:border-ring focus-visible:ring-ring/50 w-full rounded-lg border border-border bg-background p-3 text-sm outline-none transition-colors focus-visible:ring-3"
+                rows={4}
                 value={answers[q.id] ?? ""}
                 onChange={(e) => setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))}
               />

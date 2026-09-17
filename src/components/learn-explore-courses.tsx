@@ -19,7 +19,7 @@ export function LearnExploreCourses() {
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Explore public courses</h2>
+        <h2 className="font-display text-lg font-medium">Explore public courses</h2>
         <Link href="/courses" className="text-sm text-muted-foreground hover:text-foreground">
           View all
         </Link>
@@ -52,7 +52,7 @@ export function LearnExploreCourses() {
       {courses.length > 0 && (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {courses.map((c) => (
-            <Card key={c.id} className="relative transition-shadow hover:shadow">
+            <Card key={c.id} className="spotlight-border relative transition-colors hover:bg-card/80">
               <Link
                 href={`/courses/${c.topic_slug}`}
                 className="absolute inset-0 z-10 rounded-xl"

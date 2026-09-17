@@ -132,7 +132,7 @@ export function FloatingChatbot() {
       <SheetTrigger
         render={
           <Button
-            className="fixed bottom-6 right-6 z-40 size-12 rounded-full shadow-lg"
+            className="fixed bottom-6 right-6 z-40 size-12 rounded-full shadow-brand"
             size="icon"
             aria-label="Open Knovolve AI"
             title="Knovolve AI"
@@ -157,13 +157,13 @@ export function FloatingChatbot() {
         </SheetHeader>
         <div className="flex-1 space-y-3 overflow-y-auto px-4">
           {turns.map((t, i) => (
-            <div key={i} className={t.role === "user" ? "text-right" : ""}>
+            <div key={i} className={t.role === "user" ? "flex justify-end" : "flex justify-start"}>
               {t.role === "user" ? (
-                <p className="inline-block text-sm">{t.text}</p>
+                <p className="max-w-[85%] rounded-2xl rounded-br-sm bg-brand-gradient px-3 py-2 text-sm text-white">{t.text}</p>
               ) : t.status === "error" ? (
                 <p className="text-sm text-destructive">{t.text}</p>
               ) : (
-                <div className="space-y-2 text-sm text-muted-foreground [&_a]:underline [&_code]:rounded [&_code]:bg-accent [&_code]:px-1 [&_ol]:list-decimal [&_ol]:pl-5 [&_pre]:overflow-x-auto [&_ul]:list-disc [&_ul]:pl-5">
+                <div className="markdown-body max-w-[85%] space-y-2 rounded-2xl rounded-bl-sm bg-muted px-3 py-2 text-sm [&_pre]:overflow-x-auto">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>{t.text}</ReactMarkdown>
                   {t.status === "streaming" && t.text === "" && (
                     <span className="inline-flex items-center gap-1 align-middle">
@@ -179,7 +179,7 @@ export function FloatingChatbot() {
         </div>
         <form className="flex gap-2 p-4" onSubmit={handleSubmit}>
           <input
-            className="flex-1 rounded-md border border-border px-2 py-1 text-sm dark:border-border"
+            className="focus-visible:border-ring focus-visible:ring-ring/50 flex-1 rounded-lg border border-border bg-background px-3 py-1.5 text-sm outline-none transition-colors focus-visible:ring-3"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={`Ask about ${pathname.includes("/courses/") ? "this course" : "your progress"}…`}

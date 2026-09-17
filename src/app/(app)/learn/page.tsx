@@ -209,7 +209,7 @@ export default function LearnPage() {
 function SimilarCourseRow({ candidate, onTrack }: { candidate: CourseCandidate; onTrack: () => void }) {
   const published = candidate.course_url;
   const content = (
-    <Card className="transition-shadow hover:shadow">
+    <Card className="spotlight-border transition-colors hover:bg-card/80">
       <CardContent className="flex items-center justify-between gap-3 py-3">
         <div className="min-w-0">
           <p className="truncate text-sm font-medium">{candidate.topic_raw}</p>
@@ -243,7 +243,7 @@ function SimilarCourseRow({ candidate, onTrack }: { candidate: CourseCandidate; 
 
 function OtherJobRow({ job, onTrack }: { job: MyCourseJob; onTrack: () => void }) {
   const content = (
-    <Card className="transition-shadow hover:shadow">
+    <Card className="spotlight-border transition-colors hover:bg-card/80">
       <CardContent className="flex items-center justify-between gap-3 py-3">
         <div className="min-w-0">
           <p className="truncate text-sm font-medium">{job.topic_raw}</p>

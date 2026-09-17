@@ -128,10 +128,10 @@ export function ExportDialog({ slug }: { slug: string }) {
               key={option.kind}
               type="button"
               onClick={() => setSelected(option.kind)}
-              className={`rounded-md border p-3 text-left transition ${
+              className={`rounded-xl border p-3 text-left transition-colors ${
                 selected === option.kind
-                  ? "border-brand bg-brand/5"
-                  : "border-border"
+                  ? "border-brand bg-accent"
+                  : "border-border hover:bg-muted"
               }`}
               aria-pressed={selected === option.kind}
             >
@@ -160,7 +160,7 @@ export function ExportDialog({ slug }: { slug: string }) {
           }}
         />
         {job && (
-          <div className="rounded-md border border-border p-3 text-sm dark:border-border">
+          <div className="rounded-xl bg-card p-3 text-sm ring-1 ring-foreground/10">
             <p className="font-medium">{optionLabel(job.kind)}: {job.status}</p>
             {job.status === "failed" && (
               <p className="mt-1 text-destructive">{job.error ?? "PDF export failed. Please try again."}</p>

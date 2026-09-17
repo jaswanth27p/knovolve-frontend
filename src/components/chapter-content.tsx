@@ -13,13 +13,46 @@ import { ChapterContentSkeleton } from "@/components/skeletons";
 import { api, ChapterContentEvent, ChapterContentSectionEvent, ChapterVersionSection } from "@/lib/api";
 import { notifyCourseStatusChanged } from "@/lib/export-status";
 
+function normalizeHeading(s: string): string {
+  return s.trim().toLowerCase().replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim();
+}
+
+// Plain Levenshtein distance — headings here are short (well under 100
+// chars), so the O(n*m) DP table is negligible.
+function levenshteinDistance(a: string, b: string): number {
+  const rows = a.length + 1;
+  const cols = b.length + 1;
+  const dp: number[][] = Array.from({ length: rows }, (_, i) => [i, ...Array(cols - 1).fill(0)]);
+  for (let j = 1; j < cols; j++) dp[0][j] = j;
+  for (let i = 1; i < rows; i++) {
+    for (let j = 1; j < cols; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost);
+    }
+  }
+  return dp[rows - 1][cols - 1];
+}
+
+// Near-duplicate, not just exact-match: the LLM sometimes reproduces the
+// heading with a minor slip (a repeated/garbled word, punctuation drift —
+// e.g. "Early Medieval Stagnation" vs "Early Medieval St stagnation").
+// Exact string equality misses those, so allow up to ~15% character drift.
+function isSimilarHeading(a: string, b: string): boolean {
+  const na = normalizeHeading(a);
+  const nb = normalizeHeading(b);
+  if (!na || !nb) return false;
+  if (na === nb) return true;
+  const distance = levenshteinDistance(na, nb);
+  return distance / Math.max(na.length, nb.length) < 0.15;
+}
+
 // The LLM sometimes repeats the section heading as the first line of
 // body_markdown, which would otherwise render twice (once from our own <h2>,
 // once from ReactMarkdown). Drop it only when it duplicates section.heading.
 function stripLeadingDuplicateHeading(markdown: string, heading: string): string {
   const match = markdown.match(/^\s*#{1,6}\s+(.+?)\s*\n/);
   if (!match) return markdown;
-  if (match[1].trim().toLowerCase() !== heading.trim().toLowerCase()) return markdown;
+  if (!isSimilarHeading(match[1], heading)) return markdown;
   return markdown.slice(match[0].length);
 }
 
@@ -34,30 +67,36 @@ const MARKDOWN_CLASSES =
 function SectionsView({ sections }: { sections: (ChapterContentSectionEvent | ChapterVersionSection)[] }) {
   return (
     <>
-      {sections.map((section) => (
-        <section key={section.order} className="min-w-0 space-y-3">
-          <h2 className="text-xl font-semibold">{section.heading}</h2>
-          <div className={MARKDOWN_CLASSES}>
+      {sections.map((section, i) => (
+        <section
+          key={section.order}
+          className={`min-w-0 space-y-4 ${i > 0 ? "border-t border-border pt-8" : ""}`}
+        >
+          <h2 className="font-display text-2xl font-medium tracking-tight">{section.heading}</h2>
+          <div className={`markdown-body text-[0.975rem] leading-7.5 ${MARKDOWN_CLASSES}`}>
             <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
               {stripLeadingDuplicateHeading(section.body_markdown, section.heading)}
             </ReactMarkdown>
           </div>
           {section.examples.map((ex, i) => (
-            <div key={i} className="min-w-0 border-l-2 pl-3 space-y-1">
+            <div key={i} className="min-w-0 space-y-2 rounded-xl bg-paper p-4 text-paper-foreground">
+              <p className="text-xs font-medium tracking-wide text-paper-foreground/60">Worked example</p>
               <p className="font-medium">{ex.prompt}</p>
-              <div className={`text-sm text-muted-foreground ${MARKDOWN_CLASSES}`}>
+              <div className={`markdown-body text-sm leading-6.5 text-paper-foreground/80 ${MARKDOWN_CLASSES}`}>
                 <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
                   {ex.walkthrough}
                 </ReactMarkdown>
               </div>
             </div>
           ))}
-          {section.diagram_status === "pending" && <p className="text-sm">Rendering diagram…</p>}
+          {section.diagram_status === "pending" && (
+            <p className="text-sm text-muted-foreground">Rendering diagram…</p>
+          )}
           {section.diagram_status === "ready" && section.diagram_image_url && (
-            <div className="inline-block rounded-md bg-white p-3">
+            <figure className="inline-block rounded-xl bg-paper p-4 ring-1 ring-foreground/10">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={section.diagram_image_url} alt={section.heading} />
-            </div>
+              <img src={section.diagram_image_url} alt={section.heading} className="rounded-md" />
+            </figure>
           )}
           {section.diagram_status === "failed" && (
             <p className="text-sm text-muted-foreground">Diagram unavailable.</p>
@@ -125,21 +164,21 @@ export function ChapterContent({ slug, chapterId, version }: ChapterContentProps
   const hrefForVersion = (v: number) => (latest !== null && v === latest ? basePath : versionHref(v));
   const nav =
     versions.length > 1 && current !== null && latest !== null ? (
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+      <div className="inline-flex items-center gap-2 rounded-full bg-card px-2 py-1 text-sm text-muted-foreground ring-1 ring-foreground/10">
         {current > 1 ? (
           <Link
             href={hrefForVersion(current - 1)}
             aria-label="Previous version"
-            className="rounded-md p-1 hover:bg-muted dark:hover:bg-muted"
+            className="rounded-full p-1 hover:bg-muted dark:hover:bg-muted"
           >
             <ChevronLeft className="size-4" />
           </Link>
         ) : (
-          <span className="rounded-md p-1 opacity-30">
+          <span className="rounded-full p-1 opacity-30">
             <ChevronLeft className="size-4" />
           </span>
         )}
-        <span>
+        <span className="font-mono text-xs tabular-nums">
           Version {current} of {latest}
           {current === 1 ? " · original" : " · personalized review"}
         </span>
@@ -147,12 +186,12 @@ export function ChapterContent({ slug, chapterId, version }: ChapterContentProps
           <Link
             href={hrefForVersion(current + 1)}
             aria-label="Next version"
-            className="rounded-md p-1 hover:bg-muted dark:hover:bg-muted"
+            className="rounded-full p-1 hover:bg-muted dark:hover:bg-muted"
           >
             <ChevronRight className="size-4" />
           </Link>
         ) : (
-          <span className="rounded-md p-1 opacity-30">
+          <span className="rounded-full p-1 opacity-30">
             <ChevronRight className="size-4" />
           </span>
         )}
@@ -292,7 +331,7 @@ export function ChapterContent({ slug, chapterId, version }: ChapterContentProps
   const assignmentHref = viewingPast ? `${versionHref(version as number)}/assignment` : `${basePath}/assignment`;
 
   return (
-    <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-1 flex-col space-y-8 px-6 py-10 pb-20">
+    <div className="mx-auto flex w-full min-w-0 max-w-2xl flex-1 flex-col space-y-8 px-6 py-10 pb-20">
       <Link
         href={ownerModule ? `/courses/${slug}/modules/${ownerModule.id}` : `/courses/${slug}`}
         className="flex w-fit items-center gap-1 text-sm text-muted-foreground hover:underline dark:text-muted-foreground"

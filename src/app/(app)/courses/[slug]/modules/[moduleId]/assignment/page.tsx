@@ -26,7 +26,7 @@ export default function ModuleAssignmentPage() {
         <ArrowLeft className="size-4" />
         Back to module
       </Link>
-      <h1 className="text-2xl font-semibold tracking-tight">Module assignment</h1>
+      <h1 className="font-display text-3xl font-medium tracking-tight">Module assignment</h1>
       <AssignmentRunner
         slug={params.slug}
         assignmentId={moduleId}

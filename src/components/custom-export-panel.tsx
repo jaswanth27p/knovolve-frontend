@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, Send, Sparkles } from "lucide-react";
+import { Loader2, Send, MessageSquareText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   api,
@@ -32,6 +32,9 @@ export function buildCustomBrief(initialRequest: string, turns: ClarifyChatTurn[
 
 const OUTPUT_KINDS: ClarifyPlan["output_kind"][] = ["summary", "qa", "cheat_sheet", "custom"];
 const LENGTHS: ClarifyPlan["length"][] = ["short", "medium", "long"];
+
+const fieldClassName =
+  "mt-1 w-full rounded-lg border border-border bg-background px-2.5 py-1.5 text-sm text-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 
 export function CustomExportPanel({
   slug,
@@ -105,16 +108,16 @@ export function CustomExportPanel({
   }
 
   return (
-    <div className="space-y-3 border-t border-border pt-3 dark:border-border">
+    <div className="space-y-3 border-t border-border pt-3">
       <h3 className="flex items-center gap-2 text-sm font-medium">
-        <Sparkles className="size-4" />
+        <MessageSquareText className="text-brand size-4" strokeWidth={1.75} />
         Custom request
       </h3>
       <p className="text-sm text-muted-foreground">
         Examples: “Interview questions with answers,” “A short summary,” or “A revision cheat sheet.”
         The assistant may ask how long it should be or how many items you want.
       </p>
-      <div className="max-h-64 space-y-2 overflow-y-auto rounded-md border border-border p-3 dark:border-border">
+      <div className="max-h-64 space-y-2 overflow-y-auto rounded-lg bg-card p-3 ring-1 ring-foreground/10">
         {turns.length === 0 && (
           <p className="text-sm text-muted-foreground">Describe the PDF you want.</p>
         )}
@@ -129,7 +132,7 @@ export function CustomExportPanel({
       </div>
       <form className="flex gap-2" onSubmit={send}>
         <input
-          className="flex-1 rounded-md border border-border px-2 py-1 text-sm dark:border-border"
+          className={`flex-1 ${fieldClassName}`}
           value={input}
           onChange={(event) => setInput(event.target.value)}
           placeholder="Prepare interview questions for this topic…"
@@ -140,12 +143,12 @@ export function CustomExportPanel({
         </Button>
       </form>
       {plan && draft && (
-        <div className="space-y-2 rounded-md border border-border p-3 dark:border-border">
+        <div className="space-y-2 rounded-lg bg-card p-3 ring-1 ring-foreground/10">
           <p className="text-sm font-medium">Review the finalized request</p>
           <label className="block text-xs text-muted-foreground">
             Title
             <input
-              className="mt-1 w-full rounded-md border border-border px-2 py-1 text-sm text-foreground dark:border-border"
+              className={fieldClassName}
               value={draft.title}
               onChange={(event) => updateDraft({ title: event.target.value })}
             />
@@ -154,7 +157,7 @@ export function CustomExportPanel({
             <label className="block text-xs text-muted-foreground">
               Format
               <select
-                className="mt-1 w-full rounded-md border border-border px-2 py-1 text-sm text-foreground dark:border-border"
+                className={fieldClassName}
                 value={draft.output_kind}
                 onChange={(event) => updateDraft({ output_kind: event.target.value as ClarifyPlan["output_kind"] })}
               >
@@ -166,7 +169,7 @@ export function CustomExportPanel({
             <label className="block text-xs text-muted-foreground">
               Length
               <select
-                className="mt-1 w-full rounded-md border border-border px-2 py-1 text-sm text-foreground dark:border-border"
+                className={fieldClassName}
                 value={draft.length}
                 onChange={(event) => updateDraft({ length: event.target.value as ClarifyPlan["length"] })}
               >
@@ -181,7 +184,7 @@ export function CustomExportPanel({
             <input
               type="number"
               min={1}
-              className="mt-1 w-full rounded-md border border-border px-2 py-1 text-sm text-foreground dark:border-border"
+              className={fieldClassName}
               value={draft.item_count ?? ""}
               onChange={(event) =>
                 updateDraft({ item_count: event.target.value === "" ? null : Number(event.target.value) })
@@ -191,7 +194,7 @@ export function CustomExportPanel({
           <label className="block text-xs text-muted-foreground">
             Notes
             <textarea
-              className="mt-1 w-full rounded-md border border-border px-2 py-1 text-sm text-foreground dark:border-border"
+              className={fieldClassName}
               value={draft.notes ?? ""}
               onChange={(event) => updateDraft({ notes: event.target.value || null })}
             />

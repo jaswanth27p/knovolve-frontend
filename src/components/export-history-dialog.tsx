@@ -85,7 +85,7 @@ export function ExportHistoryDialog({ slug }: { slug: string }) {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger render={<Button variant="outline"><History className="size-4" />My Exports</Button>} />
+      <DialogTrigger render={<Button variant="outline"><History className="size-4" />My exports</Button>} />
       <DialogContent>
         <DialogHeader>
           <DialogTitle>My exports for this course</DialogTitle>
@@ -100,7 +100,7 @@ export function ExportHistoryDialog({ slug }: { slug: string }) {
           {jobs.map((job) => (
             <div
               key={job.id}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border p-3 dark:border-border"
+              className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-card p-3 ring-1 ring-foreground/10"
             >
               <div>
                 <p className="text-sm font-medium">{jobLabel(job)}</p>

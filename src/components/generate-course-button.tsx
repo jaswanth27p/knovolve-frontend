@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { CheckCircle2, Loader2, Sparkles } from "lucide-react";
+import { CheckCircle2, Loader2, Layers } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { api, parseExportApiError } from "@/lib/api";
@@ -83,7 +83,7 @@ export function GenerateCourseButton({ slug }: { slug: string }) {
         {generateMutation.isPending || active ? (
           <Loader2 className="size-4 animate-spin" />
         ) : (
-          <Sparkles className="size-4" />
+          <Layers className="size-4" />
         )}
         {active && run
           ? `Generating full course · ${run.completed_units}/${run.total_units}`

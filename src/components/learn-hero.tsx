@@ -1,6 +1,6 @@
 "use client";
 import { useRef } from "react";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, NotebookPen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -37,9 +37,9 @@ export function LearnHero({
     <section className="space-y-6">
       <div className="space-y-2 text-center">
         <div className="mx-auto flex size-11 items-center justify-center rounded-2xl bg-brand-gradient text-white shadow-brand">
-          <Sparkles className="size-5" aria-hidden />
+          <NotebookPen className="size-5" strokeWidth={1.75} aria-hidden />
         </div>
-        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Learn something new</h1>
+        <h1 className="font-display text-3xl font-medium tracking-tight sm:text-4xl">Learn something new</h1>
         <p className="mx-auto max-w-xl text-sm text-muted-foreground sm:text-base">
           Give us a topic — we&apos;ll build a full course for you.
         </p>

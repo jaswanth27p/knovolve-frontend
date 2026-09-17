@@ -116,7 +116,7 @@ export default function CoursesPage() {
     const isPending = pendingIds.has(c.id);
     const error = removeErrors[c.id];
     return (
-      <Card className="relative transition-shadow hover:shadow">
+      <Card className="spotlight-border relative transition-colors hover:bg-card/80">
         <Link
           href={`/courses/${c.topic_slug}`}
           className="absolute inset-0 z-10 rounded-xl"
@@ -129,7 +129,9 @@ export default function CoursesPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="flex items-center gap-2">
-          <Badge variant={c.status === "completed" ? "secondary" : "default"}>{c.status}</Badge>
+          <Badge variant={c.status === "completed" ? "secondary" : "default"}>
+            {c.status === "in_progress" ? "In progress" : c.status === "completed" ? "Completed" : c.status}
+          </Badge>
           {c.content_ready && <span className="text-xs text-muted-foreground">content ready</span>}
           <Button
             variant="ghost"
@@ -151,10 +153,10 @@ export default function CoursesPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col space-y-8 px-6 py-10">
-      <h1 className="text-2xl font-semibold tracking-tight">Courses</h1>
+      <h1 className="font-display text-3xl font-medium tracking-tight">Courses</h1>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold">My courses</h2>
+        <h2 className="font-display text-xl font-medium">My courses</h2>
         <CourseFilterBar
           searchPlaceholder="Search my courses…"
           search={mySearchInput}
@@ -198,7 +200,7 @@ export default function CoursesPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-semibold">Public courses</h2>
+        <h2 className="font-display text-xl font-medium">Public courses</h2>
         <CourseFilterBar
           searchPlaceholder="Search public courses…"
           search={pubSearchInput}
@@ -230,7 +232,7 @@ export default function CoursesPage() {
         )}
         <div className="space-y-2">
           {publicCourses.data?.items.map((c) => (
-            <Card key={c.id} className="relative transition-shadow hover:shadow">
+            <Card key={c.id} className="spotlight-border relative transition-colors hover:bg-card/80">
               <Link
                 href={`/courses/${c.topic_slug}`}
                 className="absolute inset-0 z-10 rounded-xl"
